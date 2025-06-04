@@ -1,122 +1,348 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+
+import 'package:provider/provider.dart';
+
+import 'package:fluent_ui/fluent_ui.dart'; // hide Page
+import 'package:flutter_acrylic/flutter_acrylic.dart'
+    as flutter_acrylic; // TODO remove arcylic.
+import 'package:go_router/go_router.dart';
+import 'package:window_manager/window_manager.dart';
+
+import './app/theme.dart';
+import './screens/settings.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const PomodoroPartnerApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+const appTitle = '番茄拍档';
+final _appTheme = AppTheme();
 
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: '番茄拍档',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+class PomodoroPartnerApp extends StatelessWidget {
+  const PomodoroPartnerApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+    return ChangeNotifierProvider.value(
+      value: _appTheme,
+      builder: (context, child) {
+        final appTheme = context.watch<AppTheme>();
+        return FluentApp.router(
+          title: appTitle,
+          themeMode: appTheme.mode,
+          debugShowCheckedModeBanner: false,
+          color: appTheme.color,
+          darkTheme: FluentThemeData(
+            brightness: Brightness.dark,
+            accentColor: appTheme.color,
+            visualDensity: VisualDensity.standard,
+            focusTheme: FocusThemeData(
+              glowFactor: is10footScreen(context) ? 2.0 : 0.0,
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+          ),
+          theme: FluentThemeData(
+            accentColor: appTheme.color,
+            visualDensity: VisualDensity.standard,
+            focusTheme: FocusThemeData(
+              glowFactor: is10footScreen(context) ? 2.0 : 0.0,
+            ),
+          ),
+          locale: appTheme.locale,
+          builder: (context, child) {
+            return Directionality(
+              textDirection: appTheme.textDirection,
+              child: NavigationPaneTheme(
+                data: NavigationPaneThemeData(
+                  backgroundColor:
+                      appTheme.windowEffect !=
+                          flutter_acrylic.WindowEffect.disabled
+                      ? Colors.transparent
+                      : null,
+                ),
+                child: child!,
+              ),
+            );
+          },
+          routeInformationParser: router.routeInformationParser,
+          routerDelegate: router.routerDelegate,
+          routeInformationProvider: router.routeInformationProvider,
+        );
+      },
     );
   }
 }
+
+class AppHomePage extends StatefulWidget {
+  const AppHomePage({
+    super.key,
+    required this.child,
+    required this.shellContext,
+  });
+
+  final Widget child;
+  final BuildContext? shellContext;
+
+  @override
+  State<AppHomePage> createState() => _AppHomePageState();
+}
+
+class _AppHomePageState extends State<AppHomePage> with WindowListener {
+  final viewKey = GlobalKey(debugLabel: 'Navigation View Key');
+  late final naviItems =
+      <PaneItem>[
+            PaneItem(
+              key: const ValueKey('/list'),
+              icon: const Icon(FluentIcons.task_list),
+              title: const Text('清单'),
+              body: const SizedBox.shrink(),
+            ),
+            PaneItem(
+              key: const ValueKey('/focus'),
+              icon: const Icon(FluentIcons.timer),
+              title: const Text('专注'),
+              body: const SizedBox.shrink(),
+            ),
+            PaneItem(
+              key: const ValueKey('/statistics'),
+              icon: const Icon(FluentIcons.summary_chart),
+              title: const Text('统计'),
+              body: const SizedBox.shrink(),
+            ),
+          ].map<PaneItem>((item) {
+            return PaneItem(
+              key: item.key,
+              icon: item.icon,
+              title: item.title,
+              body: item.body,
+              onTap: () {
+                final path = (item.key as ValueKey).value;
+                if (GoRouterState.of(context).uri.toString() != path) {
+                  context.go(path);
+                }
+                item.onTap?.call();
+              },
+            );
+          }).toList()
+          as List<NavigationPaneItem>;
+
+  late final footerItems = <NavigationPaneItem>[
+    PaneItemSeparator(),
+    PaneItem(
+      key: const ValueKey('/settings'),
+      icon: const Icon(FluentIcons.settings),
+      title: const Text('Settings'),
+      body: const SizedBox.shrink(),
+      onTap: () {
+        if (GoRouterState.of(context).uri.toString() != '/settings') {
+          context.go('/settings');
+        }
+      },
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    windowManager.addListener(this);
+  }
+
+  @override
+  void dispose() {
+    windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+   // final localizations = FluentLocalizations.of(context);
+
+    final appTheme = context.watch<AppTheme>();
+    final theme = FluentTheme.of(context);
+    if (widget.shellContext != null) {
+      if (router.canPop() == false) {
+        setState(() {});
+      }
+    }
+
+    return NavigationView(
+      key: viewKey,
+      appBar: NavigationAppBar(
+        automaticallyImplyLeading: false,
+        leading: const FlutterLogo(),
+        title: () {
+          if (kIsWeb) {
+            return const Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(appTitle),
+            );
+          }
+          return const DragToMoveArea(
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(appTitle),
+            ),
+          );
+        }(),
+        actions: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(end: 8.0),
+              child: ToggleSwitch(
+                content: const Text('Dark Mode'),
+                checked: FluentTheme.of(context).brightness.isDark,
+                onChanged: (v) {
+                  if (v) {
+                    appTheme.mode = ThemeMode.dark;
+                  } else {
+                    appTheme.mode = ThemeMode.light;
+                  }
+                },
+              ),
+            ),
+          ),
+          if (!kIsWeb) const WindowButtons(),
+        ]),
+      ),
+      paneBodyBuilder: (item, child) {
+        final name =
+            item?.key is ValueKey ? (item!.key as ValueKey).value : null;
+        return FocusTraversalGroup(
+          key: ValueKey('body$name'),
+          child: widget.child,
+        );
+      },
+      pane: NavigationPane(
+        selected: _calculateSelectedIndex(context),
+        header: SizedBox(
+          height: kOneLineTileHeight,
+          child: ShaderMask(
+            shaderCallback: (rect) {
+              final color = appTheme.color.defaultBrushFor(
+                theme.brightness,
+              );
+              return LinearGradient(
+                colors: [
+                  color,
+                  color,
+                ],
+              ).createShader(rect);
+            },
+            child: const FlutterLogo(
+              style: FlutterLogoStyle.horizontal,
+              size: 80.0,
+              textColor: Colors.white,
+              duration: Duration.zero,
+            ),
+          ),
+        ),
+        displayMode: appTheme.displayMode,
+        indicator: () {
+          switch (appTheme.indicator) {
+            case NavigationIndicators.end:
+              return const EndNavigationIndicator();
+            case NavigationIndicators.sticky:
+              return const StickyNavigationIndicator();
+          }
+        }(),
+        items: naviItems,
+        footerItems: footerItems,
+      ),
+    );
+  }
+
+  @override
+  void onWindowClose() async {
+    bool isPreventClose = await windowManager.isPreventClose();
+    if (isPreventClose && mounted) {
+      showDialog(
+        context: context,
+        builder: (_) {
+          return ContentDialog(
+            title: const Text('Confirm close'),
+            content: const Text('Are you sure you want to close this window?'),
+            actions: [
+              FilledButton(
+                child: const Text('Yes'),
+                onPressed: () {
+                  Navigator.pop(context);
+                  windowManager.destroy();
+                },
+              ),
+              Button(
+                child: const Text('No'),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  int _calculateSelectedIndex(BuildContext context) {
+    final location = GoRouterState.of(context).uri.toString();
+    int indexNavi = naviItems
+        .where((item) => item.key != null)
+        .toList()
+        .indexWhere((item) => item.key == Key(location));
+
+    if (indexNavi == -1) {
+      int indexFooter = footerItems
+          .where((element) => element.key != null)
+          .toList()
+          .indexWhere((element) => element.key == Key(location));
+      if (indexFooter == -1) {
+        return 0;
+      }
+      return naviItems
+              .where((element) => element.key != null)
+              .toList()
+              .length +
+          indexFooter;
+    } else {
+      return indexNavi;
+    }
+  }
+  }
+
+class WindowButtons extends StatelessWidget {
+  const WindowButtons({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final FluentThemeData theme = FluentTheme.of(context);
+
+    return SizedBox(
+      width: 138,
+      height: 50,
+      child: WindowCaption(
+        brightness: theme.brightness,
+        backgroundColor: Colors.transparent,
+      ),
+    );
+  }
+}
+
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+final _shellNavigatorKey = GlobalKey<NavigatorState>();
+final router = GoRouter(navigatorKey: rootNavigatorKey, routes: [
+  ShellRoute(
+    navigatorKey: _shellNavigatorKey,
+    builder: (context, state, child) {
+      return AppHomePage(
+        shellContext: _shellNavigatorKey.currentContext,
+        child: child,
+      );
+    },
+    routes: <GoRoute>[
+      GoRoute(path: '/list', builder: (context, state) => const SettingsScreen()),
+      GoRoute(path: '/focus', builder: (context, state) => const SettingsScreen()),
+      GoRoute(path: '/statistics', builder: (context, state) => const SettingsScreen()),
+      
+      GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
+    ],
+  ),
+]);
