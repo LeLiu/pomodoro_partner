@@ -138,40 +138,40 @@ final _navigationViewKey = GlobalKey(debugLabel: 'Navigation View Key');
 class _AppHomePageState extends State<AppHomePage> with WindowListener {
   late final naviItems =
       <NavigationPaneItem>[
-            PaneItem(
-              key: const ValueKey('/list'),
-              icon: const Icon(FluentIcons.task_list),
-              title: const Text('清单'),
-              body: const SizedBox.shrink(),
-            ),
-            PaneItem(
-              key: const ValueKey('/focus'),
-              icon: const Icon(FluentIcons.timer),
-              title: const Text('专注'),
-              body: const SizedBox.shrink(),
-            ),
-            PaneItem(
-              key: const ValueKey('/statistics'),
-              icon: const Icon(FluentIcons.summary_chart),
-              title: const Text('统计'),
-              body: const SizedBox.shrink(),
-            ),
-          ].map<NavigationPaneItem>((item) {
-            item as PaneItem;
-            return PaneItem(
-              key: item.key,
-              icon: item.icon,
-              title: item.title,
-              body: item.body,
-              onTap: () {
-                final path = (item.key as ValueKey).value;
-                if (GoRouterState.of(context).uri.toString() != path) {
-                  context.go(path);
-                }
-                item.onTap?.call();
-              },
-            );
-          }).toList();
+        PaneItem(
+          key: const ValueKey('/list'),
+          icon: const Icon(FluentIcons.task_list),
+          title: const Text('清单'),
+          body: const SizedBox.shrink(),
+        ),
+        PaneItem(
+          key: const ValueKey('/focus'),
+          icon: const Icon(FluentIcons.timer),
+          title: const Text('专注'),
+          body: const SizedBox.shrink(),
+        ),
+        PaneItem(
+          key: const ValueKey('/statistics'),
+          icon: const Icon(FluentIcons.summary_chart),
+          title: const Text('统计'),
+          body: const SizedBox.shrink(),
+        ),
+      ].map<NavigationPaneItem>((item) {
+        item as PaneItem;
+        return PaneItem(
+          key: item.key,
+          icon: item.icon,
+          title: item.title,
+          body: item.body,
+          onTap: () {
+            final path = (item.key as ValueKey).value;
+            if (GoRouterState.of(context).uri.toString() != path) {
+              context.go(path);
+            }
+            item.onTap?.call();
+          },
+        );
+      }).toList();
 
   late final footerItems = <NavigationPaneItem>[
     PaneItemSeparator(),
@@ -216,21 +216,23 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
       key: _navigationViewKey,
       appBar: NavigationAppBar(
         automaticallyImplyLeading: false,
-        leading: const FlutterLogo(),
-        title: () {
-          if (kIsWeb) {
-            return const Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(appTitle),
-            );
-          }
-          return const DragToMoveArea(
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(appTitle),
-            ),
-          );
-        }(),
+        //leading: const FlutterLogo(),
+        height: 30,
+        // title: () {
+        //   if (kIsWeb) {
+        //     return const Align(
+        //       alignment: AlignmentDirectional.centerStart,
+        //       child: Text(appTitle),
+        //     );
+        //   }
+        //   return const DragToMoveArea(
+        //     child: Align(
+        //       alignment: AlignmentDirectional.centerStart,
+        //       child: Text(appTitle),
+        //     ),
+        //   );
+        // }(),
+        title: _buidAppTitle(context),
         actions: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -266,8 +268,10 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
       },
       pane: NavigationPane(
         selected: _calculateSelectedIndex(context),
+        size: const NavigationPaneSize(openWidth: 200.0),
         header: SizedBox(
-          height: kOneLineTileHeight,
+          //height: kOneLineTileHeight,
+          height: 50,
           child: ShaderMask(
             shaderCallback: (rect) {
               final color = appTheme.color.defaultBrushFor(theme.brightness);
@@ -275,7 +279,7 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
             },
             child: const FlutterLogo(
               style: FlutterLogoStyle.horizontal,
-              size: 80.0,
+              size: 100.0,
               textColor: Colors.white,
               duration: Duration.zero,
             ),
@@ -348,6 +352,17 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
       return indexNavi;
     }
   }
+
+  Widget _buidAppTitle(BuildContext context) {
+    const title = Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Row(children: [FlutterLogo(), SizedBox(width: 10.0), Text(appTitle)]),
+    );
+    if (kIsWeb) {
+      return title;
+    }
+    return const DragToMoveArea(child: title);
+  }
 }
 
 class WindowButtons extends StatelessWidget {
@@ -359,7 +374,7 @@ class WindowButtons extends StatelessWidget {
 
     return SizedBox(
       width: 138,
-      height: 50,
+      height: 30,
       child: WindowCaption(
         brightness: theme.brightness,
         backgroundColor: Colors.transparent,
