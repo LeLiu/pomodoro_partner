@@ -12,9 +12,8 @@ import './app/theme.dart';
 import './screens/settings.dart';
 import './widgets/deferred_widget.dart';
 
-
 void main() async {
-    WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
 
   // if it's not on the web, windows or android, load the accent color
   if (!kIsWeb &&
@@ -41,7 +40,7 @@ void main() async {
       await windowManager.setPreventClose(true);
       await windowManager.setSkipTaskbar(false);
     });
-}
+  }
   runApp(const PomodoroPartnerApp());
 
   // Future.wait([
@@ -62,6 +61,7 @@ bool get isDesktop {
     TargetPlatform.macOS,
   ].contains(defaultTargetPlatform);
 }
+
 const appTitle = '番茄拍档';
 final _appTheme = AppTheme();
 
@@ -133,10 +133,11 @@ class AppHomePage extends StatefulWidget {
   State<AppHomePage> createState() => _AppHomePageState();
 }
 
+final _navigationViewKey = GlobalKey(debugLabel: 'Navigation View Key');
+
 class _AppHomePageState extends State<AppHomePage> with WindowListener {
-  final viewKey = GlobalKey(debugLabel: 'Navigation View Key');
   late final naviItems =
-      <PaneItem>[
+      <NavigationPaneItem>[
             PaneItem(
               key: const ValueKey('/list'),
               icon: const Icon(FluentIcons.task_list),
@@ -155,7 +156,8 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
               title: const Text('统计'),
               body: const SizedBox.shrink(),
             ),
-          ].map<PaneItem>((item) {
+          ].map<NavigationPaneItem>((item) {
+            item as PaneItem;
             return PaneItem(
               key: item.key,
               icon: item.icon,
@@ -169,8 +171,7 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
                 item.onTap?.call();
               },
             );
-          }).toList()
-          as List<NavigationPaneItem>;
+          }).toList();
 
   late final footerItems = <NavigationPaneItem>[
     PaneItemSeparator(),
@@ -201,7 +202,7 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-   // final localizations = FluentLocalizations.of(context);
+    // final localizations = FluentLocalizations.of(context);
 
     final appTheme = context.watch<AppTheme>();
     final theme = FluentTheme.of(context);
@@ -212,7 +213,7 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
     }
 
     return NavigationView(
-      key: viewKey,
+      key: _navigationViewKey,
       appBar: NavigationAppBar(
         automaticallyImplyLeading: false,
         leading: const FlutterLogo(),
@@ -230,30 +231,34 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
             ),
           );
         }(),
-        actions: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-          Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: Padding(
-              padding: const EdgeInsetsDirectional.only(end: 8.0),
-              child: ToggleSwitch(
-                content: const Text('Dark Mode'),
-                checked: FluentTheme.of(context).brightness.isDark,
-                onChanged: (v) {
-                  if (v) {
-                    appTheme.mode = ThemeMode.dark;
-                  } else {
-                    appTheme.mode = ThemeMode.light;
-                  }
-                },
+        actions: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(end: 8.0),
+                child: ToggleSwitch(
+                  content: const Text('Dark Mode'),
+                  checked: FluentTheme.of(context).brightness.isDark,
+                  onChanged: (v) {
+                    if (v) {
+                      appTheme.mode = ThemeMode.dark;
+                    } else {
+                      appTheme.mode = ThemeMode.light;
+                    }
+                  },
+                ),
               ),
             ),
-          ),
-          if (!kIsWeb) const WindowButtons(),
-        ]),
+            if (!kIsWeb) const WindowButtons(),
+          ],
+        ),
       ),
       paneBodyBuilder: (item, child) {
-        final name =
-            item?.key is ValueKey ? (item!.key as ValueKey).value : null;
+        final name = item?.key is ValueKey
+            ? (item!.key as ValueKey).value
+            : null;
         return FocusTraversalGroup(
           key: ValueKey('body$name'),
           child: widget.child,
@@ -265,15 +270,8 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
           height: kOneLineTileHeight,
           child: ShaderMask(
             shaderCallback: (rect) {
-              final color = appTheme.color.defaultBrushFor(
-                theme.brightness,
-              );
-              return LinearGradient(
-                colors: [
-                  color,
-                  color,
-                ],
-              ).createShader(rect);
+              final color = appTheme.color.defaultBrushFor(theme.brightness);
+              return LinearGradient(colors: [color, color]).createShader(rect);
             },
             child: const FlutterLogo(
               style: FlutterLogoStyle.horizontal,
@@ -344,16 +342,13 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
       if (indexFooter == -1) {
         return 0;
       }
-      return naviItems
-              .where((element) => element.key != null)
-              .toList()
-              .length +
+      return naviItems.where((element) => element.key != null).toList().length +
           indexFooter;
     } else {
       return indexNavi;
     }
   }
-  }
+}
 
 class WindowButtons extends StatelessWidget {
   const WindowButtons({super.key});
@@ -375,21 +370,37 @@ class WindowButtons extends StatelessWidget {
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
-final router = GoRouter(navigatorKey: rootNavigatorKey, routes: [
-  ShellRoute(
-    navigatorKey: _shellNavigatorKey,
-    builder: (context, state, child) {
-      return AppHomePage(
-        shellContext: _shellNavigatorKey.currentContext,
-        child: child,
-      );
-    },
-    routes: <GoRoute>[
-      GoRoute(path: '/list', builder: (context, state) => const SettingsScreen()),
-      GoRoute(path: '/focus', builder: (context, state) => const SettingsScreen()),
-      GoRoute(path: '/statistics', builder: (context, state) => const SettingsScreen()),
-      
-      GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
-    ],
-  ),
-]);
+final router = GoRouter(
+  navigatorKey: rootNavigatorKey,
+  initialLocation: '/list',
+  routes: [
+    ShellRoute(
+      navigatorKey: _shellNavigatorKey,
+      builder: (context, state, child) {
+        return AppHomePage(
+          shellContext: _shellNavigatorKey.currentContext,
+          child: child,
+        );
+      },
+      routes: <GoRoute>[
+        GoRoute(
+          path: '/list',
+          builder: (context, state) => const SettingsScreen(),
+        ),
+        GoRoute(
+          path: '/focus',
+          builder: (context, state) => const SettingsScreen(),
+        ),
+        GoRoute(
+          path: '/statistics',
+          builder: (context, state) => const SettingsScreen(),
+        ),
+
+        GoRoute(
+          path: '/settings',
+          builder: (context, state) => const SettingsScreen(),
+        ),
+      ],
+    ),
+  ],
+);
