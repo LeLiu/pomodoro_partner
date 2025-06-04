@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-
+import '../features/settings.dart';
 
 
 class SettingsScreen extends StatefulWidget {
@@ -33,14 +33,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _errorMessage = null;
     });
     try {
-      final config = await AppConfig.loadConfig();
-      final webdavConfig = config['webdav'] as Map<String, dynamic>? ?? {};
+      final settings = await AppSettings.loadSettings();
+      final webdavSettings = settings['webdav'] as Map<String, dynamic>? ?? {};
       setState(() {
-        _webdavEnabled = webdavConfig['on'] as bool? ?? false;
-        _hostController.text = webdavConfig['host'] as String? ?? '';
-        _userController.text = webdavConfig['user'] as String? ?? '';
-        _passwordController.text = webdavConfig['passwd'] as String? ?? '';
-        _pathController.text = webdavConfig['path'] as String? ?? '';
+        _webdavEnabled = webdavSettings['on'] as bool? ?? false;
+        _hostController.text = webdavSettings['host'] as String? ?? '';
+        _userController.text = webdavSettings['user'] as String? ?? '';
+        _passwordController.text = webdavSettings['passwd'] as String? ?? '';
+        _pathController.text = webdavSettings['path'] as String? ?? '';
         _isLoading = false;
       });
     } catch (e) {
@@ -58,16 +58,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _errorMessage = null;
       });
       try {
-        final currentConfig = await AppConfig.loadConfig();
-        final newConfig = Map<String, dynamic>.from(currentConfig);
-        newConfig['webdav'] = {
+        final currentSttings  = await AppSettings.loadSettings();
+        final newSettings = Map<String, dynamic>.from(currentSttings);
+        newSettings['webdav'] = {
           'on': _webdavEnabled,
           'host': _hostController.text,
           'user': _userController.text,
           'passwd': _passwordController.text,
           'path': _pathController.text,
         };
-        await AppConfig.saveConfig(newConfig);
+        await AppSettings.saveSettings(newSettings);
         setState(() {
           _isLoading = false;
         });
@@ -136,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _pathController,
-            decoration: const InputDecoration(labelText: '路径 (例如: /dav/letomato)'),
+            decoration: const InputDecoration(labelText: '路径 (例如: /dav/pp)'),
             validator: (value) {
               if (_webdavEnabled && (value == null || value.isEmpty)) {
                 return '请输入 WebDAV 路径';

@@ -5,11 +5,6 @@ import 'package:logger/logger.dart';
 class AppLogger {
   static late Level level;
 
-  static final Logger _globalLogger = Logger(
-    printer: PrettyPrinter(methodCount: 0, colors: true, printEmojis: true),
-    level: level,
-  );
-
   static Logger get logger => _globalLogger;
 
   static Logger forClass(Type classType) {
@@ -31,6 +26,11 @@ class AppLogger {
   static void initialize({Level level = Level.info}) {
     AppLogger.level = level;
   }
+
+  static final Logger _globalLogger = Logger(
+    printer: PrettyPrinter(methodCount: 0, colors: true, printEmojis: true),
+    level: level,
+  );
 
   static String _getSimpleClassName(Type type) {
     final fullName = type.toString();
