@@ -204,12 +204,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final webdavSection = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('WebDAV 设置', style: FluentTheme.of(context).typography.subtitle),
-        // ToggleSwitch(
-        //   title: const Text('启用 WebDAV'),
-        //   value: _webdavEnabled,
-        //   onChanged: _onWebdavEnabledChanged,
-        // ),
         _buildWebdavFields(),
       ],
     );
