@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
-import 'logger.dart';
+import '../utils/logger.dart';
 
 final defaultSettingsContent = '''
 {

@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:fluent_ui/fluent_ui.dart';
+// import 'package:flutter/material.dart';
 
 import '../features/settings.dart';
-
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -45,7 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = '加载配置失败: \$e';
+        _errorMessage = '加载配置失败: $e';
         _isLoading = false;
       });
     }
@@ -58,7 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _errorMessage = null;
       });
       try {
-        final currentSttings  = await AppSettings.loadSettings();
+        final currentSttings = await AppSettings.loadSettings();
         final newSettings = Map<String, dynamic>.from(currentSttings);
         newSettings['webdav'] = {
           'on': _webdavEnabled,
@@ -72,8 +72,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _isLoading = false;
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('设置已保存')),
+          await displayInfoBar(
+            context,
+            builder: (context, close) {
+              return InfoBar(
+                title: const Text('You can not do that :/'),
+                content: const Text(
+                  'A proper warning message of why the user can not do that :/',
+                ),
+                action: IconButton(
+                  icon: const Icon(FluentIcons.clear),
+                  onPressed: close,
+                ),
+                severity: InfoBarSeverity.warning,
+              );
+            },
           );
         }
       } catch (e) {
@@ -92,28 +105,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildWebdavFields() {
-    if (!_webdavEnabled) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0),
-      child: Column(
+    return Expander(
+      key: UniqueKey(),
+      header: Row(
         children: [
-          TextFormField(
+          const Icon(FluentIcons.fabric_network_folder),
+          SizedBox(width: 16),
+          const Text('WebDAV'),
+        ],
+      ),
+      icon: _webdavEnabled
+          ? null
+          : SizedBox(
+              width: 8,
+              height: 8,
+            ), 
+      enabled: _webdavEnabled,
+      trailing: ToggleSwitch(
+        checked: _webdavEnabled,
+        onChanged: _onWebdavEnabledChanged,
+        content: Text(_webdavEnabled ? '启用' : '禁用'),
+        leadingContent: true,
+      ),
+      initiallyExpanded: _webdavEnabled,
+      content: Column(
+        children: [
+          TextFormBox(
             controller: _hostController,
-            decoration: const InputDecoration(labelText: '主机 (例如: https://dav.example.com)'),
+            //decoration: const InputDecoration(labelText: '主机 (例如: https://dav.example.com)'),
             validator: (value) {
               if (_webdavEnabled && (value == null || value.isEmpty)) {
                 return '请输入 WebDAV 主机地址';
               }
               if (_webdavEnabled && !Uri.tryParse(value!)!.isAbsolute) {
-                return '请输入有效的主机地址 (例如 https://dav.example.com)';
+                return '请输入有效的主机地址 (例如 https://dav.jianguoyun.com/dav)';
               }
               return null;
             },
           ),
           const SizedBox(height: 16),
-          TextFormField(
+          TextFormBox(
             controller: _userController,
-            decoration: const InputDecoration(labelText: '用户名'),
+            //decoration: const InputDecoration(labelText: '用户名'),
             validator: (value) {
               if (_webdavEnabled && (value == null || value.isEmpty)) {
                 return '请输入 WebDAV 用户名';
@@ -122,9 +155,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           const SizedBox(height: 16),
-          TextFormField(
+          TextFormBox(
             controller: _passwordController,
-            decoration: const InputDecoration(labelText: '密码'),
+            //decoration: const InputDecoration(labelText: '密码'),
             obscureText: true,
             validator: (value) {
               if (_webdavEnabled && (value == null || value.isEmpty)) {
@@ -134,9 +167,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           const SizedBox(height: 16),
-          TextFormField(
+          TextFormBox(
             controller: _pathController,
-            decoration: const InputDecoration(labelText: '路径 (例如: /dav/pp)'),
+            //decoration: const InputDecoration(labelText: '路径 (例如: /dav/pp)'),
             validator: (value) {
               if (_webdavEnabled && (value == null || value.isEmpty)) {
                 return '请输入 WebDAV 路径';
@@ -154,19 +187,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: ProgressRing());
     }
     if (_errorMessage != null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+            Text(_errorMessage!, style: TextStyle(color: Colors.red)),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadSettings,
-              child: const Text('重试加载'),
-            ),
+            FilledButton(onPressed: _loadSettings, child: const Text('重试加载')),
           ],
         ),
       );
@@ -174,12 +204,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final webdavSection = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('WebDAV 设置', style: Theme.of(context).textTheme.titleLarge),
-        SwitchListTile(
-          title: const Text('启用 WebDAV'),
-          value: _webdavEnabled,
-          onChanged: _onWebdavEnabledChanged,
-        ),
+        Text('WebDAV 设置', style: FluentTheme.of(context).typography.subtitle),
+        // ToggleSwitch(
+        //   title: const Text('启用 WebDAV'),
+        //   value: _webdavEnabled,
+        //   onChanged: _onWebdavEnabledChanged,
+        // ),
         _buildWebdavFields(),
       ],
     );
@@ -193,7 +223,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             webdavSection,
             const SizedBox(height: 24),
             Center(
-              child: ElevatedButton(
+              child: FilledButton(
                 onPressed: _saveSettings,
                 child: const Text('保存设置'),
               ),
@@ -215,11 +245,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('设置'),
+    return ScaffoldPage(
+      header: PageHeader(
+        //title: Text('设置', style: FluentTheme.of(context).typography.titleLarge),
+        title: Text('设置'),
       ),
-      body: _buildBody(),
+      content: _buildBody(),
     );
   }
 }
