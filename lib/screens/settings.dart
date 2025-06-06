@@ -71,14 +71,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         setState(() {
           _isLoading = false;
         });
+   
+      } catch (e) {
+        setState(() {
+          _errorMessage = '$e';
+          _isLoading = false;
+        });
         if (mounted) {
           await displayInfoBar(
             context,
             builder: (context, close) {
               return InfoBar(
-                title: const Text('You can not do that :/'),
-                content: const Text(
-                  'A proper warning message of why the user can not do that :/',
+                title: const Text('保存配置失败'),
+                content: Text(
+                  _errorMessage ?? '',
                 ),
                 action: IconButton(
                   icon: const Icon(FluentIcons.clear),
@@ -89,11 +95,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           );
         }
-      } catch (e) {
-        setState(() {
-          _errorMessage = '保存配置失败: \$e';
-          _isLoading = false;
-        });
       }
     }
   }
@@ -156,10 +157,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 16),
           InfoLabel(
             label: '访问密码',
-            child: PasswordFormBox(
+            child: TextFormBox(
               controller: _passwordController,
               placeholder: '请输入访问密码',
-              revealMode: PasswordRevealMode.peekAlways,
+              obscureText: true,
               validator: (value) {
                 if (_webdavEnabled && (value == null || value.isEmpty)) {
                   return '请输入WebDAV密码';
@@ -244,7 +245,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return ScaffoldPage(
       header: PageHeader(
-        //title: Text('设置', style: FluentTheme.of(context).typography.titleLarge),
         title: Text('设置'),
       ),
       content: _buildBody(),
