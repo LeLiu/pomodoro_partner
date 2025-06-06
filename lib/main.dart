@@ -10,7 +10,7 @@ import 'package:window_manager/window_manager.dart';
 
 import './app/theme.dart';
 import './screens/settings.dart';
-import './widgets/deferred_widget.dart';
+
 import './utils/logger.dart';
 
 void main() async {
