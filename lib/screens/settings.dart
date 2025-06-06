@@ -71,7 +71,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         setState(() {
           _isLoading = false;
         });
-   
       } catch (e) {
         setState(() {
           _errorMessage = '$e';
@@ -83,9 +82,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             builder: (context, close) {
               return InfoBar(
                 title: const Text('保存配置失败'),
-                content: Text(
-                  _errorMessage ?? '',
-                ),
+                content: Text(_errorMessage ?? ''),
                 action: IconButton(
                   icon: const Icon(FluentIcons.clear),
                   onPressed: close,
@@ -245,7 +242,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return ScaffoldPage(
       header: PageHeader(
-        title: Text('设置'),
+        title: Row(children: [Icon(FluentIcons.settings, size: 24,), SizedBox(width: 12), Text('设置')]),
       ),
       content: _buildBody(),
     );
