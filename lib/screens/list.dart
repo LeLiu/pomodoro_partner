@@ -46,6 +46,7 @@ class _ListScreenState extends State<ListScreen>
       }
     } catch (e) {
       AppLogger.logger.e('Error loading lists in ListScreen: $e');
+      // TODO Show error message in a dialog
       if (mounted) {
         setState(() {
           _activityList = [
@@ -83,7 +84,7 @@ class _ListScreenState extends State<ListScreen>
   void _toggleItemDone(Map<String, dynamic> item) {
     if (!mounted) return;
     setState(() {
-      item['done'] = !(item['done'] as bool? ?? false);
+      item['status'] = 'completed';
       item['updatedAt'] = DateTime.now().toIso8601String();
     });
     _saveLists();
