@@ -114,12 +114,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Text('WebDAV'),
         ],
       ),
-      icon: _webdavEnabled
-          ? null
-          : SizedBox(
-              width: 8,
-              height: 8,
-            ), 
+      icon: _webdavEnabled ? null : SizedBox(width: 8, height: 8),
       enabled: _webdavEnabled,
       trailing: ToggleSwitch(
         checked: _webdavEnabled,
@@ -130,55 +125,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
       initiallyExpanded: _webdavEnabled,
       content: Column(
         children: [
-          TextFormBox(
-            controller: _hostController,
-            //decoration: const InputDecoration(labelText: '主机 (例如: https://dav.example.com)'),
-            validator: (value) {
-              if (_webdavEnabled && (value == null || value.isEmpty)) {
-                return '请输入 WebDAV 主机地址';
-              }
-              if (_webdavEnabled && !Uri.tryParse(value!)!.isAbsolute) {
-                return '请输入有效的主机地址 (例如 https://dav.jianguoyun.com/dav)';
-              }
-              return null;
-            },
+          InfoLabel(
+            label: '服务器地址',
+            child: TextFormBox(
+              controller: _hostController,
+              placeholder: '请输入服务器地址 (例如: https://dav.example.com)',
+              validator: (value) {
+                if (_webdavEnabled && (value == null || value.isEmpty)) {
+                  return '请输入WebDAV服务器地址';
+                }
+                return null;
+              },
+            ),
           ),
           const SizedBox(height: 16),
-          TextFormBox(
-            controller: _userController,
-            //decoration: const InputDecoration(labelText: '用户名'),
-            validator: (value) {
-              if (_webdavEnabled && (value == null || value.isEmpty)) {
-                return '请输入 WebDAV 用户名';
-              }
-              return null;
-            },
+          InfoLabel(
+            label: '用户名',
+            child: TextFormBox(
+              controller: _userController,
+              placeholder: '请输入用户名',
+              validator: (value) {
+                if (_webdavEnabled && (value == null || value.isEmpty)) {
+                  return '请输入WebDAV用户名';
+                }
+                return null;
+              },
+            ),
+          ),
+
+          const SizedBox(height: 16),
+          InfoLabel(
+            label: '访问密码',
+            child: PasswordFormBox(
+              controller: _passwordController,
+              placeholder: '请输入访问密码',
+              revealMode: PasswordRevealMode.peekAlways,
+              validator: (value) {
+                if (_webdavEnabled && (value == null || value.isEmpty)) {
+                  return '请输入WebDAV密码';
+                }
+                return null;
+              },
+            ),
           ),
           const SizedBox(height: 16),
-          TextFormBox(
-            controller: _passwordController,
-            //decoration: const InputDecoration(labelText: '密码'),
-            obscureText: true,
-            validator: (value) {
-              if (_webdavEnabled && (value == null || value.isEmpty)) {
-                return '请输入 WebDAV 密码';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-          TextFormBox(
-            controller: _pathController,
-            //decoration: const InputDecoration(labelText: '路径 (例如: /dav/pp)'),
-            validator: (value) {
-              if (_webdavEnabled && (value == null || value.isEmpty)) {
-                return '请输入 WebDAV 路径';
-              }
-              if (_webdavEnabled && !value!.startsWith('/')) {
-                return '路径必须以 / 开头';
-              }
-              return null;
-            },
+          InfoLabel(
+            label: '访问路径',
+            child: TextFormBox(
+              controller: _pathController,
+              placeholder: '请输入访问路径，例如 /dav/pp',
+              validator: (value) {
+                if (_webdavEnabled && (value == null || value.isEmpty)) {
+                  return '请输入WebDAV路径';
+                }
+                if (_webdavEnabled && !value!.startsWith('/')) {
+                  return '路径必须以 / 开头';
+                }
+                return null;
+              },
+            ),
           ),
         ],
       ),
@@ -203,9 +208,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     final webdavSection = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        _buildWebdavFields(),
-      ],
+      children: <Widget>[_buildWebdavFields()],
     );
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
