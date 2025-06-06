@@ -10,6 +10,8 @@ import 'package:window_manager/window_manager.dart';
 
 import './app/theme.dart';
 import './screens/settings.dart';
+import './screens/list.dart';
+import './screens/focus.dart';
 
 import './utils/logger.dart';
 
@@ -218,22 +220,7 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
       key: _navigationViewKey,
       appBar: NavigationAppBar(
         automaticallyImplyLeading: false,
-        //leading: const FlutterLogo(),
         height: 30,
-        // title: () {
-        //   if (kIsWeb) {
-        //     return const Align(
-        //       alignment: AlignmentDirectional.centerStart,
-        //       child: Text(appTitle),
-        //     );
-        //   }
-        //   return const DragToMoveArea(
-        //     child: Align(
-        //       alignment: AlignmentDirectional.centerStart,
-        //       child: Text(appTitle),
-        //     ),
-        //   );
-        // }(),
         title: _buidAppTitle(context),
         actions: Row(
           mainAxisAlignment: MainAxisAlignment.end,
@@ -310,18 +297,18 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
         context: context,
         builder: (_) {
           return ContentDialog(
-            title: const Text('Confirm close'),
-            content: const Text('Are you sure you want to close this window?'),
+            title: const Text('退出确认'),
+            content: const Text('您确定要关闭窗口并退出应用程序?'),
             actions: [
               FilledButton(
-                child: const Text('Yes'),
+                child: const Text('确认'),
                 onPressed: () {
                   Navigator.pop(context);
                   windowManager.destroy();
                 },
               ),
               Button(
-                child: const Text('No'),
+                child: const Text('取消'),
                 onPressed: () {
                   Navigator.pop(context);
                 },
@@ -402,11 +389,11 @@ final router = GoRouter(
       routes: <GoRoute>[
         GoRoute(
           path: '/list',
-          builder: (context, state) => const SettingsScreen(),
+          builder: (context, state) => const ListScreen(),
         ),
         GoRoute(
           path: '/focus',
-          builder: (context, state) => const SettingsScreen(),
+          builder: (context, state) => const FocusScreen(),
         ),
         GoRoute(
           path: '/statistics',
