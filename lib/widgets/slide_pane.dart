@@ -293,8 +293,8 @@ class _SlidePaneState extends State<SlidePane> with TickerProviderStateMixin {
   }
 }
 
-/// 侧边栏管理器，用于在页面中集成侧边栏
-class SlidePaneManager extends StatefulWidget {
+/// 滑动面板布局组件，用于在页面中集成侧边栏
+class SlideLayout extends StatefulWidget {
   /// 主要内容
   final Widget child;
   
@@ -307,79 +307,29 @@ class SlidePaneManager extends StatefulWidget {
   /// 侧边栏底部内容构建器（可选）
   final Widget Function(BuildContext context, VoidCallback closePane)? footerBuilder;
   
-  /// 初始是否显示侧边栏
-  final bool initiallyVisible;
+  /// 是否显示侧边栏
+  final bool isVisible;
   
-  /// 全局侧边栏管理器实例
-  static _SlidePaneManagerState? _globalInstance;
+  /// 面板状态变化回调
+  final ValueChanged<bool>? onVisibilityChanged;
   
-  const SlidePaneManager({
+  const SlideLayout({
     super.key,
     required this.child,
     required this.contentBuilder,
     this.config = const SlidePaneConfig(),
     this.footerBuilder,
-    this.initiallyVisible = false,
+    this.isVisible = false,
+    this.onVisibilityChanged,
   });
 
   @override
-  State<SlidePaneManager> createState() => _SlidePaneManagerState();
-  
-  /// 切换侧边栏显示状态
-  static void togglePane() {
-    _globalInstance?._togglePane();
-  }
-  
-  /// 显示侧边栏
-  static void showPane() {
-    if (_globalInstance != null && !_globalInstance!._showPane) {
-      _globalInstance!._togglePane();
-    }
-  }
-  
-  /// 隐藏侧边栏
-  static void hidePane() {
-    if (_globalInstance != null && _globalInstance!._showPane) {
-      _globalInstance!._closePane();
-    }
-  }
-  
-  /// 检查侧边栏是否可见
-  static bool get isPaneVisible {
-    return _globalInstance?._showPane ?? false;
-  }
+  State<SlideLayout> createState() => _SlideLayoutState();
 }
 
-class _SlidePaneManagerState extends State<SlidePaneManager> {
-  late bool _showPane;
-
-  @override
-  void initState() {
-    super.initState();
-    _showPane = widget.initiallyVisible;
-    // 注册为全局实例
-    SlidePaneManager._globalInstance = this;
-  }
-  
-  @override
-  void dispose() {
-    // 清理全局实例
-    if (SlidePaneManager._globalInstance == this) {
-      SlidePaneManager._globalInstance = null;
-    }
-    super.dispose();
-  }
-
-  void _togglePane() {
-    setState(() {
-      _showPane = !_showPane;
-    });
-  }
-
+class _SlideLayoutState extends State<SlideLayout> {
   void _closePane() {
-    setState(() {
-      _showPane = false;
-    });
+    widget.onVisibilityChanged?.call(false);
   }
 
   bool _isLargeScreen() {
@@ -391,33 +341,127 @@ class _SlidePaneManagerState extends State<SlidePaneManager> {
     final isLargeScreen = _isLargeScreen();
     
     return material.Scaffold(
-      body: Stack(
+      body: isLargeScreen && widget.isVisible
+          ? Row(
+              children: [
+                // 主内容区域
+                Expanded(
+                  child: widget.child,
+                ),
+                // 侧边栏
+                Container(
+                  width: widget.config.width,
+                  height: double.infinity,
+                  decoration: BoxDecoration(
+                    color: widget.config.backgroundColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.config.shadowColor,
+                        blurRadius: 24,
+                        offset: const Offset(-8, 0),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      // 面板头部
+                      _buildHeader(),
+                      
+                      // 面板内容
+                       Expanded(
+                         child: widget.contentBuilder(context, _closePane),
+                       ),
+                      
+                      // 面板底部
+                      if (widget.footerBuilder != null) _buildFooter(widget.footerBuilder!(context, _closePane)),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          : Stack(
+              children: [
+                // 主内容区域
+                SizedBox(
+                  width: double.infinity,
+                  child: widget.child,
+                ),
+                
+                // 侧边栏
+                SlidePane(
+                  isVisible: widget.isVisible,
+                  config: widget.config,
+                  content: widget.contentBuilder(context, _closePane),
+                  footer: widget.footerBuilder?.call(context, _closePane),
+                  onClose: _closePane,
+                  onOverlayTap: _closePane,
+                ),
+              ],
+            ),
+    );
+  }
+
+  
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: widget.config.headerBackgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0x0F000000),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
         children: [
-          // 主内容区域
-          SizedBox(
-            width: isLargeScreen && _showPane 
-                ? MediaQuery.of(context).size.width - widget.config.width 
-                : double.infinity,
-            child: widget.child,
+          if (widget.config.headerIcon != null) ...[
+            Icon(
+              widget.config.headerIcon!,
+              color: widget.config.headerTextColor,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+          ],
+          Text(
+            widget.config.headerTitle,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: widget.config.headerTextColor,
+            ),
           ),
-          
-          // 侧边栏
-          SlidePane(
-            isVisible: _showPane,
-            config: widget.config,
-            content: widget.contentBuilder(context, _closePane),
-            footer: widget.footerBuilder?.call(context, _closePane),
-            onClose: _closePane,
-            onOverlayTap: _closePane,
-          ),
+          const Spacer(),
+          if (widget.config.showCloseButton)
+            IconButton(
+              onPressed: _closePane,
+              icon: Icon(
+                FluentIcons.chrome_close,
+                color: widget.config.headerTextColor,
+              ),
+            ),
         ],
       ),
     );
   }
-  
-  /// 切换侧边栏显示状态
-  void togglePane() => _togglePane();
-  
-  /// 获取当前侧边栏是否显示
-  bool get isPaneVisible => _showPane;
+
+  Widget _buildFooter(Widget footer) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: widget.config.footerBackgroundColor,
+        border: Border(
+          top: BorderSide(
+            color: widget.config.borderColor,
+            width: 1,
+          ),
+        ),
+      ),
+      child: footer,
+    );
+  }
 }

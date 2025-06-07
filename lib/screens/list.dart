@@ -21,6 +21,7 @@ class _ListScreenState extends State<ListScreen>
   List<Map<String, dynamic>> _focusList = [];
   late TabController _tabController;
   bool _isLoading = true;
+  bool _showEditPanel = false;
 
   @override
   void initState() {
@@ -120,7 +121,9 @@ class _ListScreenState extends State<ListScreen>
 
   void _showEditItemPanel(
       BuildContext context, bool isActivityList, Map<String, dynamic> item) {
-    SlidePaneManager.showPane();
+    setState(() {
+      _showEditPanel = true;
+    });
   }
 
   @override
@@ -131,11 +134,17 @@ class _ListScreenState extends State<ListScreen>
 
   @override
   Widget build(BuildContext context) {
-    return SlidePaneManager(
+    return SlideLayout(
       config: const SlidePaneConfig(
         headerTitle: '编辑任务',
         headerIcon: FluentIcons.edit,
       ),
+      isVisible: _showEditPanel,
+      onVisibilityChanged: (visible) {
+        setState(() {
+          _showEditPanel = visible;
+        });
+      },
       contentBuilder: (context, closePane) => _buildEditPanel(closePane),
       child: Column(
         children: <Widget>[
