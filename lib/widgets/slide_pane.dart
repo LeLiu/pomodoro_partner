@@ -43,7 +43,7 @@ class SlidePaneConfig {
   final bool showScrollbar;
   
   const SlidePaneConfig({
-    this.width = 400.0,
+    this.width = 360.0,
     this.animationDuration = const Duration(milliseconds: 250),
     this.animationCurve = Curves.easeOutCubic,
     this.backgroundColor = const Color(0xFFFAFAFA),

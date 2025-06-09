@@ -52,9 +52,9 @@ class _TaskViewState extends State<TaskView> {
     _nameFocusNode = FocusNode();
     _isCompleted = widget.taskItem['status'] == 'completed';
     _plannedFocusCount = widget.taskItem['plannedFocusCount'] ?? 0;
-    _completedFocusCount = widget.taskItem['completedFocusCount']?? 0;
+    _completedFocusCount = widget.taskItem['completedFocusCount'] ?? 0;
     _status = widget.taskItem['status'] ?? 'pending';
-    
+
     _nameFocusNode.addListener(_onNameFocusChanged);
   }
 
@@ -105,19 +105,15 @@ class _TaskViewState extends State<TaskView> {
   Widget _buildHeader(BuildContext context) {
     return Container(
       height: 40,
-      decoration: BoxDecoration(
-        //color: FluentTheme.of(context).scaffoldBackgroundColor,
-        //color: Colors.red.lighter,
-      ),
+      decoration: BoxDecoration(),
       child: Row(
         children: [
           const Spacer(),
           IconButton(
-            //icon: const Icon(Icons.close_outlined, size :16),
             icon: const Icon(FluentIcons.cancel),
             onPressed: widget.onClose,
           ),
-          SizedBox(width: 8,)
+          SizedBox(width: 16.0),
         ],
       ),
     );
@@ -134,12 +130,14 @@ class _TaskViewState extends State<TaskView> {
 
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 任务名称组（HoverCheckbox + 可编辑文本）
             _buildNameSection(context),
+            const SizedBox(height: 24),
+
+            _buildActionRow(context),
             const SizedBox(height: 24),
 
             // 专注数组（计划专注数 + 完成专注数）
@@ -151,21 +149,18 @@ class _TaskViewState extends State<TaskView> {
             const SizedBox(height: 24),
 
             // 时间组（修改时间 + 完成时间）
-            _buildTimeSection(context, createdAt, updatedAt, completedAt, hasBeenModified),
+            _buildTimeSection(
+              context,
+              createdAt,
+              updatedAt,
+              completedAt,
+              hasBeenModified,
+            ),
             const SizedBox(height: 24),
 
             // 状态
             _buildStatusSection(context),
             const SizedBox(height: 16),
-
-            // 移动到其他列表
-            if (widget.onMoveToOtherList != null)
-              _buildActionRow(
-                context,
-                widget.isActivityItem ? FluentIcons.move_to_folder : FluentIcons.back,
-                widget.isActivityItem ? '移动到专注列表' : '移回至活动列表',
-                widget.onMoveToOtherList!,
-              ),
           ],
         ),
       ),
@@ -204,36 +199,145 @@ class _TaskViewState extends State<TaskView> {
     );
   }
 
+  Widget _buildCard(BuildContext context, Widget child) {
+    bool isHovered = false;
+    return StatefulBuilder(
+      builder: (context, setCardState) {
+        return MouseRegion(
+          onEnter: (_) => setCardState(() {
+            isHovered = true;
+          }),
+          onExit: (_) => setCardState(() {
+            isHovered = false;
+          }),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isHovered
+                  ? FluentTheme.of(context).cardColor.withValues(alpha: 0.1)
+                  : FluentTheme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: FluentTheme.of(
+                  context,
+                ).resources.dividerStrokeColorDefault,
+                width: 1,
+              ),
+            ),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
   // 构建任务名称组
   Widget _buildNameSection(BuildContext context) {
-    return Row(
+    final taskNameRow = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        HoverCheckbox(
-          value: _isCompleted,
-          onChanged: (value) {
-            setState(() {
-              _isCompleted = value ?? false;
-              _status = _isCompleted ? 'completed' : (_completedFocusCount > 0 ? 'active' : 'pending');
-            });
-            _updateTask({
-              'status': _status,
-              if (_isCompleted) 'completedAt': DateTime.now().toIso8601String(),   
-            });
-          },
+        Align(
+          alignment: Alignment.topRight,
+          child: Column(
+            children: [
+              SizedBox(height: 6.0),
+              HoverCheckbox(
+                value: _isCompleted,
+                onChanged: (value) {
+                  setState(() {
+                    _isCompleted = value ?? false;
+                    _status = _isCompleted
+                        ? 'completed'
+                        : (_completedFocusCount > 0 ? 'active' : 'pending');
+                  });
+                  _updateTask({
+                    'status': _status,
+                    if (_isCompleted)
+                      'completedAt': DateTime.now().toIso8601String(),
+                  });
+                },
+              ),
+            ],
+          ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8.0),
         Expanded(
           child: TextBox(
+            padding: EdgeInsets.all(0),
             controller: _nameController,
             focusNode: _nameFocusNode,
+            maxLines: null,
+            textInputAction: TextInputAction.done,
+            onEditingComplete: () {
+              final value = _nameController.text;
+              _nameFocusNode.unfocus();
+              if (value.trim() != _originalName) {
+                _updateTask({'name': value.trim()});
+                _originalName = value.trim();
+              }
+            },
             style: TextStyle(
               decoration: _isCompleted ? TextDecoration.lineThrough : null,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+              fontSize: 21,
+              fontWeight: FontWeight.w900,
             ),
+            decoration: WidgetStateProperty.all(
+              const BoxDecoration(
+                color: Colors.transparent,
+                border: Border.fromBorderSide(BorderSide.none),
+              ),
+            ),
+            unfocusedColor: Colors.transparent,
+            highlightColor: Colors.transparent,
           ),
         ),
       ],
+    );
+    final createdAt =
+        DateTime.tryParse(widget.taskItem['createdAt'] ?? '') ?? DateTime.now();
+    final createAtRow = Row(
+      children: [
+        Icon(FluentIcons.add_event, size: 14),
+        const SizedBox(width: 10.0),
+        Text(
+          '创建于 ${_formatDateTime(createdAt)}',
+          style: TextStyle(fontSize: 14),
+        ),
+      ],
+    );
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [taskNameRow, const SizedBox(height: 16.0), createAtRow],
+    );
+
+    bool isHovered = false;
+    return StatefulBuilder(
+      builder: (context, setCardState) {
+        return MouseRegion(
+          onEnter: (_) => setCardState(() {
+            isHovered = true;
+          }),
+          onExit: (_) => setCardState(() {
+            isHovered = false;
+          }),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isHovered
+                  ? FluentTheme.of(context).cardColor.withValues(alpha: 0.1)
+                  : FluentTheme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: FluentTheme.of(
+                  context,
+                ).resources.dividerStrokeColorDefault,
+                width: 1,
+              ),
+            ),
+            child: content,
+          ),
+        );
+      },
     );
   }
 
@@ -242,10 +346,7 @@ class _TaskViewState extends State<TaskView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '专注数',
-          style: FluentTheme.of(context).typography.bodyStrong,
-        ),
+        Text('专注数', style: FluentTheme.of(context).typography.bodyStrong),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -253,17 +354,17 @@ class _TaskViewState extends State<TaskView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '计划专注数',
-                    style: FluentTheme.of(context).typography.body,
-                  ),
+                  Text('计划专注数', style: FluentTheme.of(context).typography.body),
                   const SizedBox(height: 8),
                   ComboBox<int>(
                     value: _plannedFocusCount,
-                    items: List.generate(7, (index) => ComboBoxItem(
-                      value: index,
-                      child: Text(_getFocusCountText(index)),
-                    )),
+                    items: List.generate(
+                      7,
+                      (index) => ComboBoxItem(
+                        value: index,
+                        child: Text(_getFocusCountText(index)),
+                      ),
+                    ),
                     onChanged: (value) {
                       setState(() {
                         _plannedFocusCount = value ?? 0;
@@ -279,21 +380,25 @@ class _TaskViewState extends State<TaskView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '完成专注数',
-                    style: FluentTheme.of(context).typography.body,
-                  ),
+                  Text('完成专注数', style: FluentTheme.of(context).typography.body),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: FluentTheme.of(context).resources.dividerStrokeColorDefault,
+                        color: FluentTheme.of(
+                          context,
+                        ).resources.dividerStrokeColorDefault,
                       ),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      _getCompletedFocusText(widget.taskItem['completedFocusCount'] ?? 0),
+                      _getCompletedFocusText(
+                        widget.taskItem['completedFocusCount'] ?? 0,
+                      ),
                       style: FluentTheme.of(context).typography.body,
                     ),
                   ),
@@ -314,8 +419,8 @@ class _TaskViewState extends State<TaskView> {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         child: Text(
-          widget.taskItem['desc']?.isNotEmpty == true 
-              ? widget.taskItem['desc'] 
+          widget.taskItem['desc']?.isNotEmpty == true
+              ? widget.taskItem['desc']
               : '暂无详情',
           style: FluentTheme.of(context).typography.body,
         ),
@@ -325,14 +430,17 @@ class _TaskViewState extends State<TaskView> {
   }
 
   // 构建时间组
-  Widget _buildTimeSection(BuildContext context, DateTime createdAt, DateTime? updatedAt, DateTime? completedAt, bool hasBeenModified) {
+  Widget _buildTimeSection(
+    BuildContext context,
+    DateTime createdAt,
+    DateTime? updatedAt,
+    DateTime? completedAt,
+    bool hasBeenModified,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '时间信息',
-          style: FluentTheme.of(context).typography.bodyStrong,
-        ),
+        Text('时间信息', style: FluentTheme.of(context).typography.bodyStrong),
         const SizedBox(height: 12),
         // 创建时间
         Row(
@@ -394,10 +502,7 @@ class _TaskViewState extends State<TaskView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '状态',
-          style: FluentTheme.of(context).typography.bodyStrong,
-        ),
+        Text('状态', style: FluentTheme.of(context).typography.bodyStrong),
         const SizedBox(height: 8),
         ComboBox<String>(
           value: _status,
@@ -412,7 +517,8 @@ class _TaskViewState extends State<TaskView> {
               _isCompleted = _status == 'completed';
             });
             final updates = {'status': _status};
-            if (_status == 'completed' && widget.taskItem['completedAt'] == null) {
+            if (_status == 'completed' &&
+                widget.taskItem['completedAt'] == null) {
               updates['completedAt'] = DateTime.now().toIso8601String();
             }
             _updateTask(updates);
@@ -465,43 +571,65 @@ class _TaskViewState extends State<TaskView> {
   }
 
   // 构建操作行
-  Widget _buildActionRow(
-    BuildContext context,
-    IconData icon,
-    String label,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        decoration: BoxDecoration(
-          color: FluentTheme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: FluentTheme.of(context).resources.dividerStrokeColorDefault,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 16, color: FluentTheme.of(context).accentColor),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: TextStyle(
-                color: FluentTheme.of(context).accentColor,
-                fontWeight: FontWeight.w500,
+  Widget _buildActionRow(BuildContext context) {
+
+    bool isHovered = false;
+    return StatefulBuilder(
+      builder: (context, setCardState) {
+        return MouseRegion(
+          onEnter: (_) => setCardState(() {
+            isHovered = true;
+          }),
+          onExit: (_) => setCardState(() {
+            isHovered = false;
+          }),
+          child: GestureDetector(
+            onTap: widget.onMoveToOtherList!,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isHovered
+                    ? FluentTheme.of(context).cardColor.withValues(alpha: 0.1)
+                    : FluentTheme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: FluentTheme.of(
+                    context,
+                  ).resources.dividerStrokeColorDefault,
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    widget.isActivityItem
+                        ? FluentIcons.navigate_forward
+                        : FluentIcons.navigate_back,
+                    size: 18,
+                    color: isHovered
+                        ? FluentTheme.of(context).accentColor
+                        : FluentTheme.of(
+                            context,
+                          ).resources.textFillColorPrimary,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    widget.isActivityItem ? '移动至专注列表' : '移回至活动列表',
+                    style: TextStyle(
+                      color: isHovered
+                          ? FluentTheme.of(context).accentColor
+                          : FluentTheme.of(
+                              context,
+                            ).resources.textFillColorPrimary,
+                      fontSize: 14.0,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const Spacer(),
-            Icon(
-              FluentIcons.chevron_right,
-              size: 14,
-              color: FluentTheme.of(context).typography.caption?.color,
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

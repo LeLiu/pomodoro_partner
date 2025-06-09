@@ -4,11 +4,13 @@ import 'package:fluent_ui/fluent_ui.dart' as fluent;
 class HoverCheckbox extends StatefulWidget {
   final ValueChanged<bool?> onChanged;
   final bool value;
+  final double iconSize;
 
   const HoverCheckbox({
     super.key,
     required this.value,
     required this.onChanged,
+    this.iconSize = 18,
   });
 
   @override
@@ -27,7 +29,7 @@ class _HoverCheckboxState extends State<HoverCheckbox> {
         onTap: () => widget.onChanged(!widget.value),
         child: Icon(
           _getIcon(),
-          size: 20,
+          size: widget.iconSize,
         ),
       ),
     );
