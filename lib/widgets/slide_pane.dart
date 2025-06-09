@@ -252,19 +252,13 @@ class _SlidePaneState extends State<SlidePane> with TickerProviderStateMixin {
 /// 滑动面板布局组件，用于在页面中集成侧边栏
 class SlideLayout extends StatefulWidget {
   /// 主要内容
-  final Widget child;
+  final Widget mainContent;
   
   /// 侧边栏配置
   final SlidePaneConfig config;
   
   /// 侧边栏内容构建器
-  final Widget Function(BuildContext context, VoidCallback closePane) contentBuilder;
-  
-  /// 侧边栏底部内容构建器（可选）
-  final Widget Function(BuildContext context, VoidCallback closePane)? footerBuilder;
-  
-  /// 自定义头部组件
-  final Widget? header;
+  final Widget Function(BuildContext context, VoidCallback closePane) paneBuilder;
   
   /// 是否显示侧边栏
   final bool isVisible;
@@ -274,11 +268,9 @@ class SlideLayout extends StatefulWidget {
   
   const SlideLayout({
     super.key,
-    required this.child,
-    required this.contentBuilder,
+    required this.mainContent,
+    required this.paneBuilder,
     this.config = const SlidePaneConfig(),
-    this.footerBuilder,
-    this.header,
     this.isVisible = false,
     this.onVisibilityChanged,
   });
@@ -306,7 +298,7 @@ class _SlideLayoutState extends State<SlideLayout> {
               children: [
                 // 主内容区域
                 Expanded(
-                  child: widget.child,
+                  child: widget.mainContent,
                 ),
                 // 侧边栏
                 Container(
@@ -322,20 +314,7 @@ class _SlideLayoutState extends State<SlideLayout> {
                       ),
                     ],
                   ),
-                  child: Column(
-                    children: [
-                      // 面板头部
-                      if (widget.header != null) widget.header!,
-                      
-                      // 面板内容
-                       Expanded(
-                         child: widget.contentBuilder(context, _closePane),
-                       ),
-                      
-                      // 面板底部
-                      if (widget.footerBuilder != null) _buildFooter(widget.footerBuilder!(context, _closePane)),
-                    ],
-                  ),
+                  child: widget.paneBuilder(context, _closePane),
                 ),
               ],
             )
@@ -344,16 +323,14 @@ class _SlideLayoutState extends State<SlideLayout> {
                 // 主内容区域
                 SizedBox(
                   width: double.infinity,
-                  child: widget.child,
+                  child: widget.mainContent,
                 ),
                 
                 // 侧边栏
                 SlidePane(
                   isVisible: widget.isVisible,
                   config: widget.config,
-                  content: widget.contentBuilder(context, _closePane),
-                  footer: widget.footerBuilder?.call(context, _closePane),
-                  header: widget.header,
+                  content: widget.paneBuilder(context, _closePane),
                   onClose: _closePane,
                   onOverlayTap: _closePane,
                 ),
@@ -364,20 +341,5 @@ class _SlideLayoutState extends State<SlideLayout> {
 
 
 
-  Widget _buildFooter(Widget footer) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: widget.config.footerBackgroundColor,
-        border: Border(
-          top: BorderSide(
-            color: widget.config.borderColor,
-            width: 1,
-          ),
-        ),
-      ),
-      child: footer,
-    );
-  }
+
 }

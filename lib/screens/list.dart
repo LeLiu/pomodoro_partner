@@ -5,7 +5,7 @@ import '../models/timer.dart';
 import '../features/list.dart';
 import '../utils/logger.dart';
 import '../widgets/slide_pane.dart';
-import '../widgets/task_edit_widget.dart';
+import '../widgets/task_view.dart';
 
 VoidCallback? switchToFoucsScreen;
 
@@ -141,39 +141,14 @@ class _ListScreenState extends State<ListScreen>
   Widget build(BuildContext context) {
     return SlideLayout(
       config: const SlidePaneConfig(),
-      header: Container(
-        height: 56,
-        decoration: BoxDecoration(
-          color: FluentTheme.of(context).micaBackgroundColor,
-          border: Border(
-            bottom: BorderSide(
-              color: FluentTheme.of(context).resources.dividerStrokeColorDefault,
-              width: 1,
-            ),
-          ),
-        ),
-        child: Row(
-          children: [
-            const Spacer(),
-            IconButton(
-              icon: const Icon(FluentIcons.chrome_close),
-              onPressed: () {
-                setState(() {
-                  _showEditPanel = false;
-                });
-              },
-            ),
-          ],
-        ),
-      ),
       isVisible: _showEditPanel,
       onVisibilityChanged: (visible) {
         setState(() {
           _showEditPanel = visible;
         });
       },
-      contentBuilder: (context, closePane) => _buildEditPanel(closePane),
-      child: Column(
+      paneBuilder: (context, closePane) => _buildEditPanel(closePane),
+      mainContent: Column(
         children: <Widget>[
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -203,7 +178,7 @@ class _ListScreenState extends State<ListScreen>
       return const Center(child: Text('没有选中的任务'));
     }
 
-    return TaskEditWidget(
+    return TaskView(
       taskItem: _currentEditItem!,
       isActivityItem: _isEditingActivityItem,
       onMoveToOtherList: _moveItemToOtherList,
