@@ -5,6 +5,7 @@ import '../models/timer.dart';
 import '../features/list.dart';
 import '../utils/logger.dart';
 import '../widgets/slide_pane.dart';
+import '../widgets/task_edit_widget.dart';
 
 VoidCallback? switchToFoucsScreen;
 
@@ -22,6 +23,8 @@ class _ListScreenState extends State<ListScreen>
   late TabController _tabController;
   bool _isLoading = true;
   bool _showEditPanel = false;
+  Map<String, dynamic>? _currentEditItem;
+  bool _isEditingActivityItem = false;
 
   @override
   void initState() {
@@ -122,6 +125,8 @@ class _ListScreenState extends State<ListScreen>
   void _showEditItemPanel(
       BuildContext context, bool isActivityList, Map<String, dynamic> item) {
     setState(() {
+      _currentEditItem = Map<String, dynamic>.from(item);
+      _isEditingActivityItem = isActivityList;
       _showEditPanel = true;
     });
   }
@@ -135,9 +140,31 @@ class _ListScreenState extends State<ListScreen>
   @override
   Widget build(BuildContext context) {
     return SlideLayout(
-      config: const SlidePaneConfig(
-        headerTitle: '编辑任务',
-        headerIcon: FluentIcons.edit,
+      config: const SlidePaneConfig(),
+      header: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: FluentTheme.of(context).micaBackgroundColor,
+          border: Border(
+            bottom: BorderSide(
+              color: FluentTheme.of(context).resources.dividerStrokeColorDefault,
+              width: 1,
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            const Spacer(),
+            IconButton(
+              icon: const Icon(FluentIcons.chrome_close),
+              onPressed: () {
+                setState(() {
+                  _showEditPanel = false;
+                });
+              },
+            ),
+          ],
+        ),
       ),
       isVisible: _showEditPanel,
       onVisibilityChanged: (visible) {
@@ -172,39 +199,19 @@ class _ListScreenState extends State<ListScreen>
 
 
   Widget _buildEditPanel(VoidCallback closePane) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('编辑任务', style: FluentTheme.of(context).typography.subtitle),
-          const SizedBox(height: 16),
-          TextBox(
-            placeholder: '任务名称',
-          ),
-          const SizedBox(height: 16),
-          TextBox(
-            placeholder: '任务描述',
-            maxLines: 3,
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              FilledButton(
-                onPressed: () {
-                  closePane();
-                },
-                child: const Text('保存'),
-              ),
-              const SizedBox(width: 8),
-              Button(
-                onPressed: closePane,
-                child: const Text('取消'),
-              ),
-            ],
-          ),
-        ],
-      ),
+    if (_currentEditItem == null) {
+      return const Center(child: Text('没有选中的任务'));
+    }
+
+    return TaskEditWidget(
+      taskItem: _currentEditItem!,
+      isActivityItem: _isEditingActivityItem,
+      onMoveToOtherList: _moveItemToOtherList,
+      onDelete: () {
+        _deleteCurrentItem();
+        closePane();
+      },
+      onClose: closePane,
     );
   }
 
@@ -314,6 +321,44 @@ class _ListScreenState extends State<ListScreen>
       },
       position: position,
     );
+  }
+
+
+
+  // 移动项目到其他列表
+  void _moveItemToOtherList() {
+    if (_currentEditItem == null) return;
+    
+    setState(() {
+      if (_isEditingActivityItem) {
+        // 从活动列表移动到专注列表
+        _activityList.removeWhere((item) => item['id'] == _currentEditItem!['id']);
+        _focusList.add(_currentEditItem!);
+      } else {
+        // 从专注列表移动到活动列表
+        _focusList.removeWhere((item) => item['id'] == _currentEditItem!['id']);
+        _activityList.add(_currentEditItem!);
+      }
+      _currentEditItem!['updatedAt'] = DateTime.now().toIso8601String();
+      _showEditPanel = false;
+    });
+    _saveLists();
+  }
+
+  // 删除当前项目
+  void _deleteCurrentItem() {
+    if (_currentEditItem == null) return;
+    
+    setState(() {
+      if (_isEditingActivityItem) {
+        _activityList.removeWhere((item) => item['id'] == _currentEditItem!['id']);
+      } else {
+        _focusList.removeWhere((item) => item['id'] == _currentEditItem!['id']);
+      }
+      _currentEditItem = null;
+      _showEditPanel = false;
+    });
+    _saveLists();
   }
 
   Widget _buildAddItemInput(bool isActivityList) {

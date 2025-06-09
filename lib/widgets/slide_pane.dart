@@ -42,32 +42,20 @@ class SlidePaneConfig {
   /// 是否显示滚动条
   final bool showScrollbar;
   
-  /// 头部图标
-  final IconData? headerIcon;
-  
-  /// 头部标题
-  final String headerTitle;
-  
-  /// 是否显示关闭按钮
-  final bool showCloseButton;
-  
   const SlidePaneConfig({
-    this.width = 350.0,
-    this.animationDuration = const Duration(milliseconds: 300),
-    this.animationCurve = Curves.easeInOut,
-    this.backgroundColor = const Color(0xFFFFFFFF),
-    this.headerBackgroundColor = const Color(0xFF1E40AF),
-    this.headerTextColor = const Color(0xFFFFFFFF),
-    this.footerBackgroundColor = const Color(0xFFF8FAFC),
-    this.borderColor = const Color(0xFFE2E8F0),
-    this.shadowColor = const Color(0x1A1E293B),
+    this.width = 400.0,
+    this.animationDuration = const Duration(milliseconds: 250),
+    this.animationCurve = Curves.easeOutCubic,
+    this.backgroundColor = const Color(0xFFFAFAFA),
+    this.headerBackgroundColor = const Color(0xFFFFFFFF),
+    this.headerTextColor = const Color(0xFF1F2937),
+    this.footerBackgroundColor = const Color(0xFFFFFFFF),
+    this.borderColor = const Color(0xFFE5E7EB),
+    this.shadowColor = const Color(0x0F000000),
     this.overlayColor = const Color(0x40000000),
-    this.overlayOpacity = 0.3,
+    this.overlayOpacity = 0.4,
     this.responsiveBreakpoint = 1200.0,
-    this.showScrollbar = true,
-    this.headerIcon,
-    this.headerTitle = '面板',
-    this.showCloseButton = true,
+    this.showScrollbar = false,
   });
 }
 
@@ -85,6 +73,9 @@ class SlidePane extends StatefulWidget {
   /// 面板底部内容（可选）
   final Widget? footer;
   
+  /// 自定义头部组件
+  final Widget? header;
+  
   /// 关闭回调
   final VoidCallback? onClose;
   
@@ -97,6 +88,7 @@ class SlidePane extends StatefulWidget {
     required this.content,
     this.config = const SlidePaneConfig(),
     this.footer,
+    this.header,
     this.onClose,
     this.onOverlayTap,
   });
@@ -230,49 +222,13 @@ class _SlidePaneState extends State<SlidePane> with TickerProviderStateMixin {
   }
 
   Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: widget.config.headerBackgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0x0F000000),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          if (widget.config.headerIcon != null) ...[
-            Icon(
-              widget.config.headerIcon!,
-              color: widget.config.headerTextColor,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-          ],
-          Text(
-            widget.config.headerTitle,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: widget.config.headerTextColor,
-            ),
-          ),
-          const Spacer(),
-          if (widget.config.showCloseButton && widget.onClose != null)
-            IconButton(
-              onPressed: widget.onClose,
-              icon: Icon(
-                FluentIcons.chrome_close,
-                color: widget.config.headerTextColor,
-              ),
-            ),
-        ],
-      ),
-    );
+    // 如果有自定义header，直接使用
+    if (widget.header != null) {
+      return widget.header!;
+    }
+    
+    // 否则返回空的Container
+    return const SizedBox.shrink();
   }
 
   Widget _buildFooter() {
@@ -307,6 +263,9 @@ class SlideLayout extends StatefulWidget {
   /// 侧边栏底部内容构建器（可选）
   final Widget Function(BuildContext context, VoidCallback closePane)? footerBuilder;
   
+  /// 自定义头部组件
+  final Widget? header;
+  
   /// 是否显示侧边栏
   final bool isVisible;
   
@@ -319,6 +278,7 @@ class SlideLayout extends StatefulWidget {
     required this.contentBuilder,
     this.config = const SlidePaneConfig(),
     this.footerBuilder,
+    this.header,
     this.isVisible = false,
     this.onVisibilityChanged,
   });
@@ -365,7 +325,7 @@ class _SlideLayoutState extends State<SlideLayout> {
                   child: Column(
                     children: [
                       // 面板头部
-                      _buildHeader(),
+                      if (widget.header != null) widget.header!,
                       
                       // 面板内容
                        Expanded(
@@ -393,6 +353,7 @@ class _SlideLayoutState extends State<SlideLayout> {
                   config: widget.config,
                   content: widget.contentBuilder(context, _closePane),
                   footer: widget.footerBuilder?.call(context, _closePane),
+                  header: widget.header,
                   onClose: _closePane,
                   onOverlayTap: _closePane,
                 ),
@@ -401,52 +362,7 @@ class _SlideLayoutState extends State<SlideLayout> {
     );
   }
 
-  
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: widget.config.headerBackgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0x0F000000),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          if (widget.config.headerIcon != null) ...[
-            Icon(
-              widget.config.headerIcon!,
-              color: widget.config.headerTextColor,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-          ],
-          Text(
-            widget.config.headerTitle,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: widget.config.headerTextColor,
-            ),
-          ),
-          const Spacer(),
-          if (widget.config.showCloseButton)
-            IconButton(
-              onPressed: _closePane,
-              icon: Icon(
-                FluentIcons.chrome_close,
-                color: widget.config.headerTextColor,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildFooter(Widget footer) {
     return Container(
