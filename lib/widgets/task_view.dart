@@ -343,11 +343,10 @@ class _TaskViewState extends State<TaskView> {
 
   // 构建专注数组
   Widget _buildFocusSection(BuildContext context) {
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('专注数', style: FluentTheme.of(context).typography.bodyStrong),
-        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
@@ -572,15 +571,15 @@ class _TaskViewState extends State<TaskView> {
 
   // 构建操作行
   Widget _buildActionRow(BuildContext context) {
-
     bool isHovered = false;
+    
     return StatefulBuilder(
-      builder: (context, setCardState) {
-        return MouseRegion(
-          onEnter: (_) => setCardState(() {
+      builder: (context, setState) {  
+        return MouseRegion(    
+          onEnter: (_) => setState(() {
             isHovered = true;
           }),
-          onExit: (_) => setCardState(() {
+          onExit: (_) => setState(() {
             isHovered = false;
           }),
           child: GestureDetector(
