@@ -183,9 +183,6 @@ class _TaskViewState extends State<TaskView> {
             _buildTimeSection(context),
             const SizedBox(height: 24),
 
-            // 状态
-            _buildStatusSection(context),
-            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -194,9 +191,8 @@ class _TaskViewState extends State<TaskView> {
 
   Widget _buildFooter(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
       decoration: BoxDecoration(
-        color: FluentTheme.of(context).micaBackgroundColor,
         border: Border(
           top: BorderSide(
             color: FluentTheme.of(context).resources.dividerStrokeColorDefault,
@@ -206,18 +202,12 @@ class _TaskViewState extends State<TaskView> {
       ),
       child: Row(
         children: [
+          _buildStatusArea(context),
           const Spacer(),
           if (widget.onDelete != null)
-            Button(
+            IconButton(
               onPressed: () => _showDeleteConfirmDialog(context),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(FluentIcons.delete, size: 16),
-                  const SizedBox(width: 8),
-                  Text('删除'),
-                ],
-              ),
+              icon: Icon(FluentIcons.delete, size: 16),
             ),
         ],
       ),
@@ -689,31 +679,34 @@ class _TaskViewState extends State<TaskView> {
   }
 
   // 构建状态组
-  Widget _buildStatusSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildStatusArea(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text('状态', style: FluentTheme.of(context).typography.bodyStrong),
-        const SizedBox(height: 8),
-        ComboBox<String>(
-          value: _status,
-          items: const [
-            ComboBoxItem(value: 'pending', child: Text('未开始')),
-            ComboBoxItem(value: 'active', child: Text('进行中')),
-            ComboBoxItem(value: 'completed', child: Text('已完成')),
-          ],
-          onChanged: (value) {
-            setState(() {
-              _status = value ?? 'pending';
-              _isCompleted = _status == 'completed';
-            });
-            final updates = {'status': _status};
-            if (_status == 'completed' &&
-                widget.taskItem['completedAt'] == null) {
-              updates['completedAt'] = DateTime.now().toIso8601String();
-            }
-            _updateTask(updates);
+        Container(
+          height: 16,
+          width: 4,
+          decoration: BoxDecoration(
+            color: switch (_status) {
+              'pending' => Colors.yellow.lighter,
+              'active' => Colors.blue.lighter,
+              'completed' => Colors.green.lighter,
+              _ => Colors.red.normal,
+            },
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          switch (_status) {
+            'pending' => '待处理',
+            'active' => '进行中',
+            'completed' => '已完成',
+            _ => '出错',
           },
+          style: TextStyle(
+            fontSize: 14,
+            color: FluentTheme.of(context).inactiveColor,
+          ),
         ),
       ],
     );
