@@ -1,5 +1,6 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import '../widgets/hover_checkbox.dart';
+import '../widgets/expander.dart';
 
 /// 任务编辑组件
 class TaskView extends StatefulWidget {
@@ -37,7 +38,10 @@ class TaskView extends StatefulWidget {
 
 class _TaskViewState extends State<TaskView> {
   late TextEditingController _nameController;
+  late TextEditingController _descriptionController;
   late FocusNode _nameFocusNode;
+  late FocusNode _descriptionFocusNode;
+  late String _originalDescription;
   late String _originalName;
   late bool _isCompleted;
   late int _plannedFocusCount;
@@ -53,12 +57,18 @@ class _TaskViewState extends State<TaskView> {
     _originalName = widget.taskItem['name'] ?? '未知任务';
     _nameController = TextEditingController(text: _originalName);
     _nameFocusNode = FocusNode();
+
+    _originalDescription = widget.taskItem['desc'] ?? '';
+    _descriptionController = TextEditingController(text: _originalDescription);
+    _descriptionFocusNode = FocusNode();
+
     _isCompleted = widget.taskItem['status'] == 'completed';
     _plannedFocusCount = widget.taskItem['plannedFocusCount'] ?? 0;
     _completedFocusCount = widget.taskItem['completedFocusCount'] ?? 0;
     _status = widget.taskItem['status'] ?? 'pending';
 
     _nameFocusNode.addListener(_onNameFocusChanged);
+    _descriptionFocusNode.addListener(_onDescriptionFocusChanged);
   }
 
   @override
@@ -66,12 +76,30 @@ class _TaskViewState extends State<TaskView> {
     _nameController.dispose();
     _nameFocusNode.removeListener(_onNameFocusChanged);
     _nameFocusNode.dispose();
+
+    _descriptionController.dispose();
+    _descriptionFocusNode.removeListener(_onDescriptionFocusChanged);
+    _descriptionFocusNode.dispose();
     super.dispose();
   }
 
   void _onNameFocusChanged() {
     if (!_nameFocusNode.hasFocus) {
       _saveNameChanges();
+    }
+  }
+
+  void _onDescriptionFocusChanged() {
+    if (!_descriptionFocusNode.hasFocus) {
+      _saveDescriptionChanges();
+    }
+  }
+
+  void _saveDescriptionChanges() {
+    final newDescription = _descriptionController.text.trim();
+    if (newDescription != _originalDescription) {
+      _originalDescription = newDescription;
+      _updateTask({'desc': newDescription});
     }
   }
 
@@ -268,6 +296,7 @@ class _TaskViewState extends State<TaskView> {
         DateTime.tryParse(widget.taskItem['createdAt'] ?? '') ?? DateTime.now();
     final createAtRow = Row(
       children: [
+        const SizedBox(width: 2.0),
         Icon(FluentIcons.add_event, size: 14),
         const SizedBox(width: 10.0),
         Text(
@@ -366,20 +395,22 @@ class _TaskViewState extends State<TaskView> {
           child: GestureDetector(
             onTap: () {
               setAreaState(() {
-              plannedFoucsAreaTapped = true;
-            });
-              _menuFoucsSelectController.showFlyout(
-                autoModeConfiguration: FlyoutAutoConfiguration(
-                  preferredMode: FlyoutPlacementMode.bottomCenter,
-                ),
-                barrierColor: Colors.transparent,
-                builder: _buidPlannedFocusFlyout,
-              ).then((_) {
-                // Flyout关闭后恢复按钮状态
-                setAreaState(() {
-                  plannedFoucsAreaTapped = false;
-                });
+                plannedFoucsAreaTapped = true;
               });
+              _menuFoucsSelectController
+                  .showFlyout(
+                    autoModeConfiguration: FlyoutAutoConfiguration(
+                      preferredMode: FlyoutPlacementMode.bottomCenter,
+                    ),
+                    barrierColor: Colors.transparent,
+                    builder: _buidPlannedFocusFlyout,
+                  )
+                  .then((_) {
+                    // Flyout关闭后恢复按钮状态
+                    setAreaState(() {
+                      plannedFoucsAreaTapped = false;
+                    });
+                  });
             },
             child: FlyoutTarget(
               key: _menuFoucsSelectAttachKey,
@@ -418,15 +449,17 @@ class _TaskViewState extends State<TaskView> {
                               color: FluentTheme.of(context).inactiveColor,
                             ),
                           ),
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          _getFocusCountText(_plannedFocusCount, false),
-                          style: TextStyle(fontSize: 14),
-                        ),
-                      ),
-                    ),
+                    hoverStatus == 1 || plannedFoucsAreaTapped
+                        ? SizedBox.shrink()
+                        : Expanded(
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                _getFocusCountText(_plannedFocusCount, false),
+                                style: TextStyle(fontSize: 14),
+                              ),
+                            ),
+                          ),
                     SizedBox(width: 4),
                   ],
                 ),
@@ -499,19 +532,95 @@ class _TaskViewState extends State<TaskView> {
 
   // 构建任务详情组
   Widget _buildDetailsSection(BuildContext context) {
-    return Expander(
-      header: Text('任务详情'),
-      content: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          widget.taskItem['desc']?.isNotEmpty == true
-              ? widget.taskItem['desc']
-              : '暂无详情',
-          style: FluentTheme.of(context).typography.body,
-        ),
-      ),
-      initiallyExpanded: true,
+    bool isHovered = false;
+
+    return StatefulBuilder(
+      builder: (context, setState) {
+        // Header widget
+        Widget headerWidget = MouseRegion(
+          onEnter: (_) => setState(() {
+            isHovered = true;
+          }),
+          onExit: (_) => setState(() {
+            isHovered = false;
+          }),
+          child: Container(
+            padding: EdgeInsets.all(0),
+            decoration: BoxDecoration(
+              color: isHovered
+                  ? FluentTheme.of(context).cardColor.withValues(alpha: 0.1)
+                  : FluentTheme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Row(
+              children: [
+                SizedBox(width: 12),
+                Icon(
+                  FluentIcons.info,
+                  size: 18,
+                  color: isHovered
+                      ? FluentTheme.of(context).accentColor.normal
+                      : FluentTheme.of(context).inactiveColor,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  '任务详情',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isHovered
+                        ? FluentTheme.of(context).accentColor.normal
+                        : FluentTheme.of(context).inactiveColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+
+        // Content widget
+        Widget contentWidget = Container(
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          child: TextBox(
+            padding: EdgeInsets.all(0),
+            placeholder: '输入任务描述...',
+            controller: _descriptionController,
+            focusNode: _descriptionFocusNode,
+            maxLines: null,
+            textInputAction: TextInputAction.done,
+            onEditingComplete: () {
+              final value = _descriptionController.text;
+              _descriptionFocusNode.unfocus();
+              if (value.trim() != _originalDescription) {
+                _updateTask({'desc': value.trim()});
+                _originalDescription = value.trim();
+              }
+            },
+            style: TextStyle(fontSize: 14),
+            decoration: WidgetStateProperty.all(
+              const BoxDecoration(
+                color: Colors.transparent,
+                border: Border.fromBorderSide(BorderSide.none),
+              ),
+            ),
+            unfocusedColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+          ),
+        );
+
+        return PpExpander(
+          contentPadding: EdgeInsets.all(0),
+          header: headerWidget,
+          content: contentWidget,
+          onStateChanged: (value) {
+            if (value == true) {
+              // 延迟一帧确保TextBox已经渲染完成
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _descriptionFocusNode.requestFocus();
+              });
+            }
+          },
+        );
+      },
     );
   }
 

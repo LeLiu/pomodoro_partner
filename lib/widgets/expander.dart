@@ -29,9 +29,9 @@ enum ExpanderDirection {
 /// See also:
 ///
 ///   * <https://docs.microsoft.com/en-us/windows/apps/design/controls/expander>
-class PPExpander extends StatefulWidget {
+class PpExpander extends StatefulWidget {
   /// Creates a fluent-styled expander.
-  const PPExpander({
+  const PpExpander({
     super.key,
     this.leading,
     required this.header,
@@ -166,10 +166,10 @@ class PPExpander extends StatefulWidget {
   }
 
   @override
-  State<Expander> createState() => ExpanderState();
+  State<PpExpander> createState() => PpExpanderState();
 }
 
-class PPExpanderState extends State<Expander>
+class PpExpanderState extends State<PpExpander>
     with SingleTickerProviderStateMixin {
   late FluentThemeData _theme;
 
@@ -256,7 +256,7 @@ class PPExpanderState extends State<Expander>
                     ),
                   ),
             ),
-            padding: const EdgeInsetsDirectional.only(start: 16.0),
+            padding: const EdgeInsetsDirectional.only(start: 0.0),
             alignment: AlignmentDirectional.centerStart,
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               if (widget.leading != null)
@@ -284,14 +284,14 @@ class PPExpanderState extends State<Expander>
                       horizontal: 10.0,
                       vertical: 10.0,
                     ),
-                    decoration: BoxDecoration(
-                      color: ButtonThemeData.uncheckedInputColor(
-                        _theme,
-                        states,
-                        transparentWhenNone: true,
-                      ),
-                      borderRadius: BorderRadius.circular(6.0),
-                    ),
+                    // decoration: BoxDecoration(
+                    //   // color: ButtonThemeData.uncheckedInputColor(
+                    //   //   _theme,
+                    //   //   states,
+                    //   //   transparentWhenNone: true,
+                    //   // ),
+                    //   // borderRadius: BorderRadius.circular(6.0),
+                    // ),
                     child: widget.icon ??
                         RotationTransition(
                           turns: Tween<double>(
