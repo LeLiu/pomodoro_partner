@@ -180,13 +180,7 @@ class _TaskViewState extends State<TaskView> {
             const SizedBox(height: 24),
 
             // 时间组（修改时间 + 完成时间）
-            _buildTimeSection(
-              context,
-              createdAt,
-              updatedAt,
-              completedAt,
-              hasBeenModified,
-            ),
+            _buildTimeSection(context),
             const SizedBox(height: 24),
 
             // 状态
@@ -624,71 +618,73 @@ class _TaskViewState extends State<TaskView> {
     );
   }
 
+  Widget _buildTimeArea(BuildContext context, IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: FluentTheme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: FluentTheme.of(context).inactiveColor),
+          const SizedBox(width: 12),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 14,
+              color: FluentTheme.of(context).inactiveColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // 构建时间组
-  Widget _buildTimeSection(
-    BuildContext context,
-    DateTime createdAt,
-    DateTime? updatedAt,
-    DateTime? completedAt,
-    bool hasBeenModified,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('时间信息', style: FluentTheme.of(context).typography.bodyStrong),
-        const SizedBox(height: 12),
-        // 创建时间
-        Row(
-          children: [
-            Icon(
-              FluentIcons.calendar,
-              size: 16,
-              color: FluentTheme.of(context).typography.caption?.color,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '创建于 ${_formatDateTime(createdAt)}',
-              style: FluentTheme.of(context).typography.caption,
-            ),
-          ],
+  Widget _buildTimeSection(BuildContext context) {
+    final createdAt =
+        DateTime.tryParse(widget.taskItem['createdAt'] ?? '') ?? DateTime.now();
+    final updatedAt = DateTime.tryParse(widget.taskItem['updatedAt'] ?? '');
+    final completedAt = DateTime.tryParse(widget.taskItem['completedAt'] ?? '');
+    final hasBeenModified =
+        updatedAt != null &&
+        updatedAt.isAfter(createdAt.add(const Duration(seconds: 1)));
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: FluentTheme.of(context).resources.dividerStrokeColorDefault,
+          width: 1,
         ),
-        // 修改时间
-        if (hasBeenModified) ...[
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(
-                FluentIcons.edit,
-                size: 16,
-                color: FluentTheme.of(context).typography.caption?.color,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '修改于 ${_formatDateTime(updatedAt!)}',
-                style: FluentTheme.of(context).typography.caption,
-              ),
-            ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildTimeArea(
+            context,
+            FluentIcons.add_event,
+            '创建于 ${_formatDateTime(createdAt)}',
           ),
+          hasBeenModified ? Divider() : Container(),
+          hasBeenModified
+              ? _buildTimeArea(
+                  context,
+                  FluentIcons.edit_event,
+                  '更新于 ${_formatDateTime(updatedAt)}',
+                )
+              : Container(),
+          completedAt != null ? Divider() : Container(),
+          completedAt != null
+              ? _buildTimeArea(
+                  context,
+                  FluentIcons.confirm_event,
+                  '完成于 ${_formatDateTime(completedAt)}',
+                )
+              : Container(),
         ],
-        // 完成时间
-        if (completedAt != null) ...[
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(
-                FluentIcons.check_mark,
-                size: 16,
-                color: FluentTheme.of(context).typography.caption?.color,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '完成于 ${_formatDateTime(completedAt)}',
-                style: FluentTheme.of(context).typography.caption,
-              ),
-            ],
-          ),
-        ],
-      ],
+      ),
     );
   }
 
@@ -757,7 +753,10 @@ class _TaskViewState extends State<TaskView> {
   }
 
   // 格式化日期时间
-  String _formatDateTime(DateTime dateTime) {
+  String _formatDateTime(DateTime? dateTime) {
+    if (dateTime == null) {
+      return '';
+    }
     return '${dateTime.year}年${dateTime.month}月${dateTime.day}日 ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
