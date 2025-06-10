@@ -139,8 +139,33 @@ class _ListScreenState extends State<ListScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = FluentTheme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    
     return SlideLayout(
-      config: const SlidePaneConfig(),
+      config: SlidePaneConfig(
+        backgroundColor: isDarkMode 
+            ? theme.scaffoldBackgroundColor 
+            : const Color(0xFFFAFAFA),
+        headerBackgroundColor: isDarkMode 
+            ? theme.scaffoldBackgroundColor 
+            : const Color(0xFFFFFFFF),
+        headerTextColor: isDarkMode 
+            ? (theme.typography.body?.color ?? theme.inactiveColor) 
+            : const Color(0xFF1F2937),
+        footerBackgroundColor: isDarkMode 
+            ? theme.scaffoldBackgroundColor 
+            : const Color(0xFFFFFFFF),
+        borderColor: isDarkMode 
+            ? theme.resources.dividerStrokeColorDefault 
+            : const Color(0xFFE5E7EB),
+        shadowColor: isDarkMode 
+            ? theme.shadowColor 
+            : const Color(0x0F000000),
+        overlayColor: isDarkMode 
+            ? theme.resources.layerOnMicaBaseAltFillColorDefault 
+            : const Color(0x40000000),
+      ),
       isVisible: _showEditPanel,
       onVisibilityChanged: (visible) {
         setState(() {

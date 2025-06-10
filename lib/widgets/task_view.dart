@@ -152,36 +152,39 @@ class _TaskViewState extends State<TaskView> {
 
   Widget _buildBody(BuildContext context) {
     return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildNameSection(context),
-            
-            widget.isActivityItem ? Container() :  SizedBox(height: 24),
-            widget.isActivityItem ? Container() : _buildStartActionSection(context),
+      child: Scrollbar(
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildNameSection(context),
+              
+              widget.isActivityItem ? Container() :  SizedBox(height: 24),
+              widget.isActivityItem ? Container() : _buildStartActionSection(context),
 
-             const SizedBox(height: 24),
-            _buildMoveActionSection(context),
-           
+               const SizedBox(height: 24),
+              _buildMoveActionSection(context),
+             
 
-            // 专注数组（计划专注数 + 完成专注数）
-            const SizedBox(height: 24),
-            _buildFocusSection(context),
-            
+              // 专注数组（计划专注数 + 完成专注数）
+              const SizedBox(height: 24),
+              _buildFocusSection(context),
+              
 
-            // 任务详情（使用Expander）
-            const SizedBox(height: 24),
-            _buildDescSection(context),
-            
+              // 任务详情（使用Expander）
+              const SizedBox(height: 24),
+              _buildDescSection(context),
+              
 
-            // 时间组（修改时间 + 完成时间）
-            const SizedBox(height: 24),
-            _buildTimeSection(context),
+              // 时间组（修改时间 + 完成时间）
+              const SizedBox(height: 24),
+              _buildTimeSection(context),
 
-            const SizedBox(height: 24),
-          ],
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );
