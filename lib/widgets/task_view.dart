@@ -202,38 +202,6 @@ class _TaskViewState extends State<TaskView> {
     );
   }
 
-  Widget _buildCard(BuildContext context, Widget child) {
-    bool isHovered = false;
-    return StatefulBuilder(
-      builder: (context, setCardState) {
-        return MouseRegion(
-          onEnter: (_) => setCardState(() {
-            isHovered = true;
-          }),
-          onExit: (_) => setCardState(() {
-            isHovered = false;
-          }),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isHovered
-                  ? FluentTheme.of(context).cardColor.withValues(alpha: 0.1)
-                  : FluentTheme.of(context).cardColor,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(
-                color: FluentTheme.of(
-                  context,
-                ).resources.dividerStrokeColorDefault,
-                width: 1,
-              ),
-            ),
-            child: child,
-          ),
-        );
-      },
-    );
-  }
-
   // 构建任务名称组
   Widget _buildNameSection(BuildContext context) {
     final taskNameRow = Row(
@@ -345,15 +313,22 @@ class _TaskViewState extends State<TaskView> {
   }
 
   Widget _buidPlannedFocusFlyout(BuildContext context) {
+    // 获取触发器的宽度
+    final RenderBox? renderBox =
+        _menuFoucsSelectAttachKey.currentContext?.findRenderObject()
+            as RenderBox?;
+    final double targetWidth = renderBox?.size.width ?? 200;
+
     return MenuFlyout(
+      constraints: BoxConstraints(minWidth: targetWidth, maxWidth: targetWidth),
       items: [
         ...List.generate(
           5,
           (index) => MenuFlyoutItem(
-            text: Text(_getFocusCountText(index+1, false)),
+            text: Text(_getFocusCountText(index + 1, false)),
             onPressed: () {
               setState(() {
-                _plannedFocusCount = index;
+                _plannedFocusCount = index + 1;
               });
               _updateTask({'plannedFocusCount': _plannedFocusCount});
             },
@@ -377,6 +352,7 @@ class _TaskViewState extends State<TaskView> {
 
   Widget _buildFocusSection(BuildContext context) {
     int hoverStatus = 0; // 0: 未划过，1: 划过计划专注数，2: 划过已完成专注数。
+    bool plannedFoucsAreaTapped = false;
 
     final plannedFoucsAreaBuider = StatefulBuilder(
       builder: (context, setAreaState) {
@@ -389,13 +365,21 @@ class _TaskViewState extends State<TaskView> {
           }),
           child: GestureDetector(
             onTap: () {
+              setAreaState(() {
+              plannedFoucsAreaTapped = true;
+            });
               _menuFoucsSelectController.showFlyout(
                 autoModeConfiguration: FlyoutAutoConfiguration(
                   preferredMode: FlyoutPlacementMode.bottomCenter,
-                  //preferredMode:FlyoutPlacementMode.full,
                 ),
+                barrierColor: Colors.transparent,
                 builder: _buidPlannedFocusFlyout,
-              );
+              ).then((_) {
+                // Flyout关闭后恢复按钮状态
+                setAreaState(() {
+                  plannedFoucsAreaTapped = false;
+                });
+              });
             },
             child: FlyoutTarget(
               key: _menuFoucsSelectAttachKey,
@@ -403,7 +387,7 @@ class _TaskViewState extends State<TaskView> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: hoverStatus == 1
+                  color: hoverStatus == 1 || plannedFoucsAreaTapped
                       ? FluentTheme.of(context).cardColor.withValues(alpha: 0.1)
                       : FluentTheme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(4),
@@ -414,12 +398,12 @@ class _TaskViewState extends State<TaskView> {
                     Icon(
                       FluentIcons.bullseye,
                       size: 18,
-                      color: hoverStatus == 1
+                      color: hoverStatus == 1 || plannedFoucsAreaTapped
                           ? FluentTheme.of(context).accentColor.normal
                           : FluentTheme.of(context).inactiveColor,
                     ),
                     const SizedBox(width: 10),
-                    hoverStatus == 1
+                    hoverStatus == 1 || plannedFoucsAreaTapped
                         ? Text(
                             '设置计划的专注数',
                             style: TextStyle(
@@ -656,7 +640,7 @@ class _TaskViewState extends State<TaskView> {
 
   // 获取专注数文本
   String _getFocusCountText(int count, bool isCompleted) {
-    if (count == 6 && !isCompleted) {
+    if (count == 0 && !isCompleted) {
       return '未设置';
     }
     return '🍅 × $count';
