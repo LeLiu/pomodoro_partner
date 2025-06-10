@@ -44,6 +44,9 @@ class _TaskViewState extends State<TaskView> {
   late int _completedFocusCount;
   late String _status;
 
+  final _menuFoucsSelectController = FlyoutController();
+  final _menuFoucsSelectAttachKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -137,7 +140,7 @@ class _TaskViewState extends State<TaskView> {
             _buildNameSection(context),
             const SizedBox(height: 24),
 
-            _buildActionRow(context),
+            _buildActionSection(context),
             const SizedBox(height: 24),
 
             // 专注数组（计划专注数 + 完成专注数）
@@ -312,12 +315,12 @@ class _TaskViewState extends State<TaskView> {
 
     bool isHovered = false;
     return StatefulBuilder(
-      builder: (context, setCardState) {
+      builder: (context, setSectionState) {
         return MouseRegion(
-          onEnter: (_) => setCardState(() {
+          onEnter: (_) => setSectionState(() {
             isHovered = true;
           }),
-          onExit: (_) => setCardState(() {
+          onExit: (_) => setSectionState(() {
             isHovered = false;
           }),
           child: Container(
@@ -341,72 +344,160 @@ class _TaskViewState extends State<TaskView> {
     );
   }
 
-  // 构建专注数组
-  Widget _buildFocusSection(BuildContext context) {
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('计划专注数', style: FluentTheme.of(context).typography.body),
-                  const SizedBox(height: 8),
-                  ComboBox<int>(
-                    value: _plannedFocusCount,
-                    items: List.generate(
-                      7,
-                      (index) => ComboBoxItem(
-                        value: index,
-                        child: Text(_getFocusCountText(index)),
-                      ),
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        _plannedFocusCount = value ?? 0;
-                      });
-                      _updateTask({'plannedFocusCount': _plannedFocusCount});
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 24),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('完成专注数', style: FluentTheme.of(context).typography.body),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: FluentTheme.of(
-                          context,
-                        ).resources.dividerStrokeColorDefault,
-                      ),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      _getCompletedFocusText(
-                        widget.taskItem['completedFocusCount'] ?? 0,
-                      ),
-                      style: FluentTheme.of(context).typography.body,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+  Widget _buidPlannedFocusFlyout(BuildContext context) {
+    return MenuFlyout(
+      items: [
+        ...List.generate(
+          6,
+          (index) => MenuFlyoutItem(
+            text: Text(_getFocusCountText(index + 1, false)),
+            onPressed: () {
+              setState(() {
+                _plannedFocusCount = index;
+              });
+              _updateTask({'plannedFocusCount': _plannedFocusCount});
+            },
+          ),
+        ),
+        const MenuFlyoutSeparator(),
+        MenuFlyoutItem(
+          leading: const Icon(FluentIcons.undo),
+          text: const Text('不设置专注'),
+          onPressed: () {
+            setState(() {
+              _plannedFocusCount = 0;
+            });
+            _updateTask({'plannedFocusCount': _plannedFocusCount});
+            Flyout.of(context).close();
+          },
         ),
       ],
+    );
+  }
+
+  Widget _buildFocusSection(BuildContext context) {
+    int hoverStatus = 0; // 0: 未划过，1: 划过计划专注数，2: 划过已完成专注数。
+
+    final plannedFoucsAreaBuider = StatefulBuilder(
+      builder: (context, setAreaState) {
+        return MouseRegion(
+          onEnter: (_) => setAreaState(() {
+            hoverStatus = 1;
+          }),
+          onExit: (_) => setAreaState(() {
+            hoverStatus = 0;
+          }),
+          child: GestureDetector(
+            onTap: () {
+              _menuFoucsSelectController.showFlyout(
+                autoModeConfiguration: FlyoutAutoConfiguration(
+                  preferredMode: FlyoutPlacementMode.bottomCenter,
+                ),
+                builder: _buidPlannedFocusFlyout,
+              );
+            },
+            child: FlyoutTarget(
+              key: _menuFoucsSelectAttachKey,
+              controller: _menuFoucsSelectController,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: hoverStatus == 1
+                      ? FluentTheme.of(context).cardColor.withValues(alpha: 0.1)
+                      : FluentTheme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+
+                child: Row(
+                  children: [
+                    Icon(
+                      FluentIcons.bullseye,
+                      size: 18,
+                      color: hoverStatus == 1
+                          ? FluentTheme.of(context).accentColor.normal
+                          : FluentTheme.of(context).inactiveColor,
+                    ),
+                    const SizedBox(width: 10),
+                    hoverStatus == 1
+                        ? Text(
+                            '设置计划的专注数',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: FluentTheme.of(context).accentColor.normal,
+                            ),
+                          )
+                        : Text(
+                            '计划专注数',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: FluentTheme.of(context).inactiveColor,
+                            ),
+                          ),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          _getFocusCountText(_plannedFocusCount, false),
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    final completedFoucsAreaBuider = StatefulBuilder(
+      builder: (context, setAreaState) {
+        return MouseRegion(
+          onEnter: (_) => setAreaState(() {
+            hoverStatus = 2;
+          }),
+          onExit: (_) => setAreaState(() {
+            hoverStatus = 0;
+          }),
+
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: hoverStatus == 2
+                  ? FluentTheme.of(context).cardColor.withValues(alpha: 0.1)
+                  : FluentTheme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(4),
+            ),
+
+            child: Row(
+              children: [
+                Icon(
+                  FluentIcons.bullseye,
+                  size: 18,
+                  color: FluentTheme.of(context).inactiveColor,
+                ),
+                const SizedBox(width: 10),
+                Text('完成专注数'),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      _getFocusCountText(_completedFocusCount, true),
+                      style: TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [plannedFoucsAreaBuider, Divider(), completedFoucsAreaBuider],
     );
   }
 
@@ -552,16 +643,12 @@ class _TaskViewState extends State<TaskView> {
   }
 
   // 获取专注数文本
-  String _getFocusCountText(int count) {
-    if (count == 0) {
-      return '未选择';
+  String _getFocusCountText(int count, bool isCompleted) {
+    if (count == 0 && !isCompleted) {
+      return '未设置';
     }
     return '🍅 × $count';
-  }
-
-  // 获取完成专注数文本
-  String _getCompletedFocusText(int count) {
-    return '🍅 × $count';
+    //return '🍅' * count;
   }
 
   // 格式化日期时间
@@ -570,16 +657,16 @@ class _TaskViewState extends State<TaskView> {
   }
 
   // 构建操作行
-  Widget _buildActionRow(BuildContext context) {
+  Widget _buildActionSection(BuildContext context) {
     bool isHovered = false;
-    
+
     return StatefulBuilder(
-      builder: (context, setState) {  
-        return MouseRegion(    
-          onEnter: (_) => setState(() {
+      builder: (context, setSectionState) {
+        return MouseRegion(
+          onEnter: (_) => setSectionState(() {
             isHovered = true;
           }),
-          onExit: (_) => setState(() {
+          onExit: (_) => setSectionState(() {
             isHovered = false;
           }),
           child: GestureDetector(
