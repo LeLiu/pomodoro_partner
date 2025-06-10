@@ -348,9 +348,9 @@ class _TaskViewState extends State<TaskView> {
     return MenuFlyout(
       items: [
         ...List.generate(
-          6,
+          5,
           (index) => MenuFlyoutItem(
-            text: Text(_getFocusCountText(index + 1, false)),
+            text: Text(_getFocusCountText(index+1, false)),
             onPressed: () {
               setState(() {
                 _plannedFocusCount = index;
@@ -361,14 +361,14 @@ class _TaskViewState extends State<TaskView> {
         ),
         const MenuFlyoutSeparator(),
         MenuFlyoutItem(
-          leading: const Icon(FluentIcons.undo),
-          text: const Text('不设置专注'),
+          //leading: const Icon(FluentIcons.undo),
+          text: const Text('不设置'),
           onPressed: () {
             setState(() {
               _plannedFocusCount = 0;
             });
             _updateTask({'plannedFocusCount': _plannedFocusCount});
-            Flyout.of(context).close();
+            //Flyout.of(context).close();
           },
         ),
       ],
@@ -392,6 +392,7 @@ class _TaskViewState extends State<TaskView> {
               _menuFoucsSelectController.showFlyout(
                 autoModeConfiguration: FlyoutAutoConfiguration(
                   preferredMode: FlyoutPlacementMode.bottomCenter,
+                  //preferredMode:FlyoutPlacementMode.full,
                 ),
                 builder: _buidPlannedFocusFlyout,
               );
@@ -442,6 +443,7 @@ class _TaskViewState extends State<TaskView> {
                         ),
                       ),
                     ),
+                    SizedBox(width: 4),
                   ],
                 ),
               ),
@@ -473,7 +475,7 @@ class _TaskViewState extends State<TaskView> {
             child: Row(
               children: [
                 Icon(
-                  FluentIcons.bullseye,
+                  FluentIcons.completed12,
                   size: 18,
                   color: FluentTheme.of(context).inactiveColor,
                 ),
@@ -488,6 +490,7 @@ class _TaskViewState extends State<TaskView> {
                     ),
                   ),
                 ),
+                SizedBox(width: 4),
               ],
             ),
           ),
@@ -495,9 +498,18 @@ class _TaskViewState extends State<TaskView> {
       },
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [plannedFoucsAreaBuider, Divider(), completedFoucsAreaBuider],
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: FluentTheme.of(context).resources.dividerStrokeColorDefault,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [plannedFoucsAreaBuider, Divider(), completedFoucsAreaBuider],
+      ),
     );
   }
 
@@ -644,7 +656,7 @@ class _TaskViewState extends State<TaskView> {
 
   // 获取专注数文本
   String _getFocusCountText(int count, bool isCompleted) {
-    if (count == 0 && !isCompleted) {
+    if (count == 6 && !isCompleted) {
       return '未设置';
     }
     return '🍅 × $count';
