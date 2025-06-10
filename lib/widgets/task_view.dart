@@ -38,10 +38,10 @@ class TaskView extends StatefulWidget {
 
 class _TaskViewState extends State<TaskView> {
   late TextEditingController _nameController;
-  late TextEditingController _descriptionController;
+  late TextEditingController _descController;
   late FocusNode _nameFocusNode;
-  late FocusNode _descriptionFocusNode;
-  late String _originalDescription;
+  late FocusNode _descFocusNode;
+  late String _originalDesc;
   late String _originalName;
   late bool _isCompleted;
   late int _plannedFocusCount;
@@ -58,9 +58,9 @@ class _TaskViewState extends State<TaskView> {
     _nameController = TextEditingController(text: _originalName);
     _nameFocusNode = FocusNode();
 
-    _originalDescription = widget.taskItem['desc'] ?? '';
-    _descriptionController = TextEditingController(text: _originalDescription);
-    _descriptionFocusNode = FocusNode();
+    _originalDesc = widget.taskItem['desc'] ?? '';
+    _descController = TextEditingController(text: _originalDesc);
+    _descFocusNode = FocusNode();
 
     _isCompleted = widget.taskItem['status'] == 'completed';
     _plannedFocusCount = widget.taskItem['plannedFocusCount'] ?? 0;
@@ -68,7 +68,7 @@ class _TaskViewState extends State<TaskView> {
     _status = widget.taskItem['status'] ?? 'pending';
 
     _nameFocusNode.addListener(_onNameFocusChanged);
-    _descriptionFocusNode.addListener(_onDescriptionFocusChanged);
+    _descFocusNode.addListener(_onDescriptionFocusChanged);
   }
 
   @override
@@ -77,9 +77,9 @@ class _TaskViewState extends State<TaskView> {
     _nameFocusNode.removeListener(_onNameFocusChanged);
     _nameFocusNode.dispose();
 
-    _descriptionController.dispose();
-    _descriptionFocusNode.removeListener(_onDescriptionFocusChanged);
-    _descriptionFocusNode.dispose();
+    _descController.dispose();
+    _descFocusNode.removeListener(_onDescriptionFocusChanged);
+    _descFocusNode.dispose();
     super.dispose();
   }
 
@@ -90,15 +90,15 @@ class _TaskViewState extends State<TaskView> {
   }
 
   void _onDescriptionFocusChanged() {
-    if (!_descriptionFocusNode.hasFocus) {
+    if (!_descFocusNode.hasFocus) {
       _saveDescriptionChanges();
     }
   }
 
   void _saveDescriptionChanges() {
-    final newDescription = _descriptionController.text.trim();
-    if (newDescription != _originalDescription) {
-      _originalDescription = newDescription;
+    final newDescription = _descController.text.trim();
+    if (newDescription != _originalDesc) {
+      _originalDesc = newDescription;
       _updateTask({'desc': newDescription});
     }
   }
@@ -151,14 +151,6 @@ class _TaskViewState extends State<TaskView> {
   }
 
   Widget _buildBody(BuildContext context) {
-    final createdAt =
-        DateTime.tryParse(widget.taskItem['createdAt'] ?? '') ?? DateTime.now();
-    final updatedAt = DateTime.tryParse(widget.taskItem['updatedAt'] ?? '');
-    final hasBeenModified =
-        updatedAt != null &&
-        updatedAt.isAfter(createdAt.add(const Duration(seconds: 1)));
-    final completedAt = DateTime.tryParse(widget.taskItem['completedAt'] ?? '');
-
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
@@ -166,23 +158,29 @@ class _TaskViewState extends State<TaskView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildNameSection(context),
-            const SizedBox(height: 24),
+            
+            widget.isActivityItem ? Container() :  SizedBox(height: 24),
+            widget.isActivityItem ? Container() : _buildStartActionSection(context),
 
-            _buildActionSection(context),
-            const SizedBox(height: 24),
+             const SizedBox(height: 24),
+            _buildMoveActionSection(context),
+           
 
             // 专注数组（计划专注数 + 完成专注数）
-            _buildFocusSection(context),
             const SizedBox(height: 24),
+            _buildFocusSection(context),
+            
 
             // 任务详情（使用Expander）
-            _buildDetailsSection(context),
             const SizedBox(height: 24),
+            _buildDescSection(context),
+            
 
             // 时间组（修改时间 + 完成时间）
-            _buildTimeSection(context),
             const SizedBox(height: 24),
+            _buildTimeSection(context),
 
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -276,22 +274,30 @@ class _TaskViewState extends State<TaskView> {
         ),
       ],
     );
-    final createdAt =
-        DateTime.tryParse(widget.taskItem['createdAt'] ?? '') ?? DateTime.now();
-    final createAtRow = Row(
+
+    final taskTypeRow = Row(
       children: [
         const SizedBox(width: 2.0),
-        Icon(FluentIcons.add_event, size: 14),
+        Icon(
+          widget.isActivityItem
+              ? FluentIcons.group_list
+              : FluentIcons.favorite_list,
+          size: 14,
+          color: FluentTheme.of(context).inactiveColor,
+        ),
         const SizedBox(width: 10.0),
         Text(
-          '创建于 ${_formatDateTime(createdAt)}',
-          style: TextStyle(fontSize: 14),
+          widget.isActivityItem ? '活动清单任务' : '专注清单任务',
+          style: TextStyle(
+            fontSize: 14,
+            color: FluentTheme.of(context).inactiveColor,
+          ),
         ),
       ],
     );
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [taskNameRow, const SizedBox(height: 16.0), createAtRow],
+      children: [taskNameRow, const SizedBox(height: 16.0), taskTypeRow],
     );
 
     bool isHovered = false;
@@ -515,7 +521,7 @@ class _TaskViewState extends State<TaskView> {
   }
 
   // 构建任务详情组
-  Widget _buildDetailsSection(BuildContext context) {
+  Widget _buildDescSection(BuildContext context) {
     bool isHovered = false;
 
     return StatefulBuilder(
@@ -563,20 +569,20 @@ class _TaskViewState extends State<TaskView> {
 
         // Content widget
         Widget contentWidget = Container(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: TextBox(
             padding: EdgeInsets.all(0),
             placeholder: '输入任务描述...',
-            controller: _descriptionController,
-            focusNode: _descriptionFocusNode,
+            controller: _descController,
+            focusNode: _descFocusNode,
             maxLines: null,
             textInputAction: TextInputAction.done,
             onEditingComplete: () {
-              final value = _descriptionController.text;
-              _descriptionFocusNode.unfocus();
-              if (value.trim() != _originalDescription) {
+              final value = _descController.text;
+              _descFocusNode.unfocus();
+              if (value.trim() != _originalDesc) {
                 _updateTask({'desc': value.trim()});
-                _originalDescription = value.trim();
+                _originalDesc = value.trim();
               }
             },
             style: TextStyle(fontSize: 14),
@@ -599,7 +605,7 @@ class _TaskViewState extends State<TaskView> {
             if (value == true) {
               // 延迟一帧确保TextBox已经渲染完成
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                _descriptionFocusNode.requestFocus();
+                _descFocusNode.requestFocus();
               });
             }
           },
@@ -754,7 +760,7 @@ class _TaskViewState extends State<TaskView> {
   }
 
   // 构建操作行
-  Widget _buildActionSection(BuildContext context) {
+  Widget _buildMoveActionSection(BuildContext context) {
     bool isHovered = false;
 
     return StatefulBuilder(
@@ -793,7 +799,7 @@ class _TaskViewState extends State<TaskView> {
                         ? FluentTheme.of(context).accentColor
                         : FluentTheme.of(
                             context,
-                          ).resources.textFillColorPrimary,
+                          ).inactiveColor,
                   ),
                   const SizedBox(width: 10),
                   Text(
@@ -802,8 +808,68 @@ class _TaskViewState extends State<TaskView> {
                       color: isHovered
                           ? FluentTheme.of(context).accentColor
                           : FluentTheme.of(
-                              context,
-                            ).resources.textFillColorPrimary,
+                            context,
+                          ).inactiveColor,
+                      fontSize: 14.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStartActionSection(BuildContext context) {
+    bool isHovered = false;
+
+    return StatefulBuilder(
+      builder: (context, setSectionState) {
+        return MouseRegion(
+          onEnter: (_) => setSectionState(() {
+            isHovered = true;
+          }),
+          onExit: (_) => setSectionState(() {
+            isHovered = false;
+          }),
+          child: GestureDetector(
+            //onTap: () {},
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isHovered
+                    ? FluentTheme.of(context).cardColor.withValues(alpha: 0.1)
+                    : FluentTheme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: FluentTheme.of(
+                    context,
+                  ).resources.dividerStrokeColorDefault,
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    FluentIcons.m_s_n_videos,
+                    size: 18,
+                    color: isHovered
+                        ? FluentTheme.of(context).accentColor
+                        : FluentTheme.of(
+                            context,
+                          ).inactiveColor,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    '开始执行专注',
+                    style: TextStyle(
+                      color: isHovered
+                          ? FluentTheme.of(context).accentColor
+                          : FluentTheme.of(
+                            context,
+                          ).inactiveColor,
                       fontSize: 14.0,
                     ),
                   ),
