@@ -152,6 +152,26 @@ class _SlidePaneState extends State<SlidePane> with TickerProviderStateMixin {
     
     return Stack(
       children: [
+        // 遮罩层（当面板打开时，仅在小屏幕显示）
+        // 将遮罩层放在前面，这样面板内容可以覆盖它
+        if (widget.isVisible && !isLargeScreen)
+          AnimatedBuilder(
+            animation: _slideAnimation,
+            builder: (context, child) {
+              return Opacity(
+                opacity: (1.0 - _slideAnimation.value) * widget.config.overlayOpacity,
+                child: GestureDetector(
+                  onTap: widget.onOverlayTap ?? widget.onClose,
+                  child: Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    color: widget.config.overlayColor,
+                  ),
+                ),
+              );
+            },
+          ),
+
         // 右侧滑出面板
         if (widget.isVisible || (isLargeScreen && widget.isVisible))
           AnimatedBuilder(
@@ -193,25 +213,6 @@ class _SlidePaneState extends State<SlidePane> with TickerProviderStateMixin {
                         if (widget.footer != null) _buildFooter(),
                       ],
                     ),
-                  ),
-                ),
-              );
-            },
-          ),
-        
-        // 遮罩层（当面板打开时，仅在小屏幕显示）
-        if (widget.isVisible && !isLargeScreen)
-          AnimatedBuilder(
-            animation: _slideAnimation,
-            builder: (context, child) {
-              return Opacity(
-                opacity: (1.0 - _slideAnimation.value) * widget.config.overlayOpacity,
-                child: GestureDetector(
-                  onTap: widget.onOverlayTap ?? widget.onClose,
-                  child: Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    color: widget.config.overlayColor,
                   ),
                 ),
               );

@@ -20,7 +20,7 @@ class TabSwitch extends StatefulWidget {
 class _TabSwitchState extends State<TabSwitch>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  late Animation<double> _slideAnimation;
+  // late Animation<double> _slideAnimation; // Unused
 
   @override
   void initState() {
@@ -29,13 +29,16 @@ class _TabSwitchState extends State<TabSwitch>
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    _slideAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    // _slideAnimation = Tween<double>(
+    //   begin: 0.0,
+    //   end: 1.0,
+    // ).animate(_animationController); // Unused
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
@@ -44,12 +47,6 @@ class _TabSwitchState extends State<TabSwitch>
     if (oldWidget.selectedIndex != widget.selectedIndex) {
       _animationController.forward(from: 0.0);
     }
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   @override

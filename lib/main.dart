@@ -211,7 +211,7 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
     // final localizations = FluentLocalizations.of(context);
 
     final appTheme = context.watch<AppTheme>();
-    final theme = FluentTheme.of(context);
+    // final theme = FluentTheme.of(context); // Unused
     if (widget.shellContext != null) {
       if (router.canPop() == false) {
         setState(() {});
