@@ -14,10 +14,12 @@ import './screens/list.dart';
 import './screens/focus.dart';
 
 import './utils/logger.dart';
+import './features/list.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   AppLogger.initialize(level: Level.all);
+  TaskListManager.initialize();
 
   // if it's not on the web, windows or android, load the accent color
   if (!kIsWeb &&

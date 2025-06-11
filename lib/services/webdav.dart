@@ -61,7 +61,7 @@ class WebdavService {
     }
   }
 
-  Future<SyncOperation> checkFile(String localFilePath, String remoteFilePath) async {
+  Future<SyncOperation> getSyncOperation(String localFilePath, String remoteFilePath) async {
     remoteFilePath = '$_path/$remoteFilePath';
     webdav.File remoteFile;
     try {
@@ -101,7 +101,7 @@ class WebdavService {
   }
 
   Future<void> syncFile(String localFilePath, String remoteFilePath) async {
-    var syncOp = await checkFile(localFilePath, remoteFilePath);
+    var syncOp = await getSyncOperation(localFilePath, remoteFilePath);
     switch (syncOp) {
       case SyncOperation.fetch:
         await fetchFile(remoteFilePath, localFilePath);
@@ -112,5 +112,23 @@ class WebdavService {
       case SyncOperation.noop:
         break;
     }  
+  }
+
+  Future<bool> fileExists(String remoteFilePath) async {
+    remoteFilePath = '$_path/$remoteFilePath';
+    webdav.File remoteFile;
+    try {
+       remoteFile = await _client.readProps(remoteFilePath);
+    }
+     catch (e, s) {
+      if (e is DioException) {
+        if (e.response?.statusCode == 404) {
+          return false;
+        }
+      }
+      _logger.e('Error checking file on WebDAV: $e \n $s');
+      rethrow;
+    }
+    return remoteFile.name != null;
   }
 }

@@ -56,10 +56,10 @@ class _ListScreenState extends State<ListScreen>
       if (mounted) {
         setState(() {
           _activityList = [
-            {'name': '活动列表加载失败', 'id': 'error', 'done': false}
+            {'name': '活动列表加载失败', 'id': 'error', 'status': 'pending'}
           ];
           _focusList = [
-            {'name': '专注列表加载失败', 'id': 'error', 'done': false}
+            {'name': '专注列表加载失败', 'id': 'error', 'status': 'pending'}
           ];
           _isLoading = false;
         });
@@ -90,8 +90,21 @@ class _ListScreenState extends State<ListScreen>
   void _toggleItemDone(Map<String, dynamic> item) {
     if (!mounted) return;
     setState(() {
-      item['status'] = 'completed';
+      final bool currentDone = item['status'] == 'completed';
+      item['status'] = !currentDone ? 'completed' : 'pending';
       item['updatedAt'] = DateTime.now().toIso8601String();
+      if (!currentDone) {
+        item['completedAt'] = DateTime.now().toIso8601String();
+      } else {
+        item['completedAt'] = null;
+      }
+      
+      // 如果当前编辑的是同一个项目，同步更新编辑面板中的数据
+      if (_currentEditItem != null && _currentEditItem!['id'] == item['id']) {
+        _currentEditItem!['status'] = item['status'];
+        _currentEditItem!['updatedAt'] = item['updatedAt'];
+        _currentEditItem!['completedAt'] = item['completedAt'];
+      }
     });
     _saveLists();
   }
@@ -223,6 +236,18 @@ class _ListScreenState extends State<ListScreen>
         closePane();
       },
       onClose: closePane,
+      onTaskUpdate: (updatedTask) {
+        setState(() {
+          _currentEditItem = updatedTask;
+          // 同步更新列表中的对应项目
+          final targetList = _isEditingActivityItem ? _activityList : _focusList;
+          final index = targetList.indexWhere((item) => item['id'] == updatedTask['id']);
+          if (index != -1) {
+            targetList[index] = Map<String, dynamic>.from(updatedTask);
+          }
+        });
+        _saveLists();
+      },
     );
   }
 
@@ -295,7 +320,7 @@ class _ListScreenState extends State<ListScreen>
             itemCount: todoList.length,
             itemBuilder: (context, index) {
               final item = todoList[index];
-              final bool isDone = item['done'] as bool? ?? false;
+              final bool isDone = item['status'] == 'completed';
               return _buildListItem(item, isActivityList, isDone);
             },
           ),
@@ -387,7 +412,7 @@ class _ListScreenState extends State<ListScreen>
           'id': DateTime.now().millisecondsSinceEpoch.toString(),
           'name': controller.text,
           'desc': '',
-          'done': false,
+          'status': 'pending',
           'createdAt': DateTime.now().toIso8601String(),
           'updatedAt': DateTime.now().toIso8601String(),
           'plannedFocusCount': 0,
