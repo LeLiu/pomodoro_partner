@@ -221,6 +221,7 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
       appBar: NavigationAppBar(
         automaticallyImplyLeading: false,
         height: 30,
+        //leading: _buidAppTitle(context),
         title: _buidAppTitle(context),
         actions: Row(
           mainAxisAlignment: MainAxisAlignment.end,
@@ -258,22 +259,22 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
       pane: NavigationPane(
         selected: _calculateSelectedIndex(context),
         size: const NavigationPaneSize(openWidth: 200.0),
-        header: SizedBox(
-          //height: kOneLineTileHeight,
-          height: 50,
-          child: ShaderMask(
-            shaderCallback: (rect) {
-              final color = appTheme.color.defaultBrushFor(theme.brightness);
-              return LinearGradient(colors: [color, color]).createShader(rect);
-            },
-            child: const FlutterLogo(
-              style: FlutterLogoStyle.horizontal,
-              size: 100.0,
-              textColor: Colors.white,
-              duration: Duration.zero,
-            ),
-          ),
-        ),
+        // header: SizedBox(
+        //   //height: kOneLineTileHeight,
+        //   height: 50,
+        //   child: ShaderMask(
+        //     shaderCallback: (rect) {
+        //       final color = appTheme.color.defaultBrushFor(theme.brightness);
+        //       return LinearGradient(colors: [color, color]).createShader(rect);
+        //     },
+        //     child: const FlutterLogo(
+        //       style: FlutterLogoStyle.horizontal,
+        //       size: 100.0,
+        //       textColor: Colors.white,
+        //       duration: Duration.zero,
+        //     ),
+        //   ),
+        // ),
         displayMode: appTheme.displayMode,
         indicator: () {
           switch (appTheme.indicator) {
@@ -343,14 +344,14 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
   }
 
   Widget _buidAppTitle(BuildContext context) {
-    const title = Align(
+    final title = Align(
       alignment: AlignmentDirectional.centerStart,
-      child: Row(children: [FlutterLogo(), SizedBox(width: 10.0), Text(appTitle)]),
+      child: Row(children: [Image.asset('assets/logo.png', width: 20, height: 20), SizedBox(width: 8.0), Text(appTitle, style: TextStyle(fontSize: 14))]),
     );
     if (kIsWeb) {
       return title;
     }
-    return const DragToMoveArea(child: title);
+    return DragToMoveArea(child: title);
   }
 }
 

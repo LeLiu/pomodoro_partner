@@ -7,6 +7,7 @@ import '../utils/logger.dart';
 import '../widgets/slide_pane.dart';
 import '../widgets/task_view.dart';
 import '../widgets/tab_switch.dart';
+import '../widgets/hover_checkbox.dart';
 
 VoidCallback? switchToFoucsScreen;
 
@@ -247,8 +248,8 @@ class _ListScreenState extends State<ListScreen>
                 controller);
           },
           child: ListTile(
-          leading: Checkbox(
-            checked: isDone,
+          leading: HoverCheckbox(
+            value: isDone,
             onChanged: (value) => _toggleItemDone(item),
           ),
           title: Text(
