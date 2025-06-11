@@ -54,6 +54,34 @@ class _TaskViewState extends State<TaskView> {
   @override
   void initState() {
     super.initState();
+    _initializeState();
+    _nameFocusNode.addListener(_onNameFocusChanged);
+    _descFocusNode.addListener(_onDescriptionFocusChanged);
+  }
+
+  @override
+  void didUpdateWidget(TaskView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Check if the taskItem itself has changed or if its status has changed.
+    // Using a simple check for 'id' and 'status' for now.
+    // A more robust solution might involve deep comparison or a version/timestamp.
+    if (widget.taskItem['id'] != oldWidget.taskItem['id'] || 
+        widget.taskItem['status'] != oldWidget.taskItem['status']) {
+      // If the taskItem has changed, re-initialize the state
+      // First, remove old listeners if they were attached to focus nodes that might be disposed
+      _nameFocusNode.removeListener(_onNameFocusChanged);
+      _descFocusNode.removeListener(_onDescriptionFocusChanged);
+
+      // Re-initialize controllers and state variables
+      _initializeState();
+
+      // Add listeners to the potentially new focus nodes (or re-add to existing if not disposed)
+      _nameFocusNode.addListener(_onNameFocusChanged);
+      _descFocusNode.addListener(_onDescriptionFocusChanged);
+    }
+  }
+
+  void _initializeState() {
     _originalName = widget.taskItem['name'] ?? '未知任务';
     _nameController = TextEditingController(text: _originalName);
     _nameFocusNode = FocusNode();
@@ -66,9 +94,6 @@ class _TaskViewState extends State<TaskView> {
     _plannedFocusCount = widget.taskItem['plannedFocusCount'] ?? 0;
     _completedFocusCount = widget.taskItem['completedFocusCount'] ?? 0;
     _status = widget.taskItem['status'] ?? 'pending';
-
-    _nameFocusNode.addListener(_onNameFocusChanged);
-    _descFocusNode.addListener(_onDescriptionFocusChanged);
   }
 
   @override
