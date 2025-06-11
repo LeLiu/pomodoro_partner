@@ -225,24 +225,28 @@ class _ListScreenState extends State<ListScreen>
     );
   }
 
-  Widget _buildListItem(Map<String, dynamic> item, bool isActivityList) {
-    final bool isDone = item['done'] as bool? ?? false;
+  Widget _buildListItem(
+      Map<String, dynamic> item, bool isActivityList, bool isDone) {
+    final FlyoutController controller = FlyoutController();
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2.0),
       decoration: BoxDecoration(
         color: FluentTheme.of(context).cardColor,
         borderRadius: BorderRadius.circular(4.0),
       ),
-      child: GestureDetector(
-        onSecondaryTapUp: (details) {
-          _showItemContextMenu(
-              context,
-              details.globalPosition,
-              item,
-              isActivityList,
-              isDone);
-        },
-        child: ListTile(
+      child: FlyoutTarget(
+        controller: controller,
+        child: GestureDetector(
+          onSecondaryTapUp: (details) {
+            _showItemContextMenu(
+                context,
+                details.globalPosition,
+                item,
+                isActivityList,
+                isDone,
+                controller);
+          },
+          child: ListTile(
           leading: Checkbox(
             checked: isDone,
             onChanged: (value) => _toggleItemDone(item),
@@ -266,6 +270,7 @@ class _ListScreenState extends State<ListScreen>
                   },
                 ),
         ),
+        ),
       ),
     );
   }
@@ -287,8 +292,11 @@ class _ListScreenState extends State<ListScreen>
         Expanded(
           child: ListView.builder(
             itemCount: todoList.length,
-            itemBuilder: (context, index) =>
-                _buildListItem(todoList[index], isActivityList),
+            itemBuilder: (context, index) {
+              final item = todoList[index];
+              final bool isDone = item['done'] as bool? ?? false;
+              return _buildListItem(item, isActivityList, isDone);
+            },
           ),
         ),
         _buildAddItemInput(isActivityList),
@@ -297,9 +305,7 @@ class _ListScreenState extends State<ListScreen>
   }
 
   void _showItemContextMenu(BuildContext context, Offset position,
-      Map<String, dynamic> item, bool isActivityList, bool isDone) {
-    final FlyoutController controller = FlyoutController();
-
+      Map<String, dynamic> item, bool isActivityList, bool isDone, FlyoutController controller) {
     controller.showFlyout(
       barrierColor: Colors.transparent,
       builder: (context) {
