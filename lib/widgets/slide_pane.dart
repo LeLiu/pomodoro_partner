@@ -166,13 +166,13 @@ class _SlidePaneState extends State<SlidePane> with TickerProviderStateMixin {
                     height: double.infinity,
                     decoration: BoxDecoration(
                       color: widget.config.backgroundColor,
-                      boxShadow: [
-                        BoxShadow(
-                          color: widget.config.shadowColor,
-                          blurRadius: 24,
-                          offset: const Offset(-8, 0),
-                        ),
-                      ],
+                      // boxShadow: [
+                      //   BoxShadow(
+                      //     color: widget.config.shadowColor,
+                      //     blurRadius: 24,
+                      //     offset: const Offset(-8, 0),
+                      //   ),
+                      // ],
                     ),
                     child: Column(
                       children: [

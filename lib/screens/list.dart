@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart' hide Colors, IconButton, Checkbox, ListTile, FilledButton;
+import 'package:flutter/material.dart'
+    hide Colors, IconButton, Checkbox, ListTile, FilledButton;
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:provider/provider.dart';
 import '../models/timer.dart';
@@ -44,8 +45,9 @@ class _ListScreenState extends State<ListScreen>
       final todoList = await TaskListManager.syncAndLoadList();
       if (mounted) {
         setState(() {
-          _activityList =
-              List<Map<String, dynamic>>.from(todoList.activityList);
+          _activityList = List<Map<String, dynamic>>.from(
+            todoList.activityList,
+          );
           _focusList = List<Map<String, dynamic>>.from(todoList.focusList);
           _isLoading = false;
         });
@@ -56,10 +58,10 @@ class _ListScreenState extends State<ListScreen>
       if (mounted) {
         setState(() {
           _activityList = [
-            {'name': '活动列表加载失败', 'id': 'error', 'status': 'pending'}
+            {'name': '活动列表加载失败', 'id': 'error', 'status': 'pending'},
           ];
           _focusList = [
-            {'name': '专注列表加载失败', 'id': 'error', 'status': 'pending'}
+            {'name': '专注列表加载失败', 'id': 'error', 'status': 'pending'},
           ];
           _isLoading = false;
         });
@@ -76,13 +78,16 @@ class _ListScreenState extends State<ListScreen>
     } catch (e) {
       AppLogger.logger.e('Error saving lists in ListScreen: $e');
       if (mounted) {
-        displayInfoBar(context, builder: (context, close) {
-          return InfoBar(
-            title: const Text('错误'),
-            content: Text('保存列表失败: $e'),
-            severity: InfoBarSeverity.error,
-          );
-        });
+        displayInfoBar(
+          context,
+          builder: (context, close) {
+            return InfoBar(
+              title: const Text('错误'),
+              content: Text('保存列表失败: $e'),
+              severity: InfoBarSeverity.error,
+            );
+          },
+        );
       }
     }
   }
@@ -98,7 +103,7 @@ class _ListScreenState extends State<ListScreen>
       } else {
         item['completedAt'] = null;
       }
-      
+
       // 如果当前编辑的是同一个项目，同步更新编辑面板中的数据
       if (_currentEditItem != null && _currentEditItem!['id'] == item['id']) {
         _currentEditItem!['status'] = item['status'];
@@ -117,8 +122,6 @@ class _ListScreenState extends State<ListScreen>
     _saveLists();
   }
 
-
-
   void _deleteFocusItem(Map<String, dynamic> item) {
     if (!mounted) return;
     setState(() {
@@ -135,10 +138,11 @@ class _ListScreenState extends State<ListScreen>
     }
   }
 
-
-
   void _showEditItemPanel(
-      BuildContext context, bool isActivityList, Map<String, dynamic> item) {
+    BuildContext context,
+    bool isActivityList,
+    Map<String, dynamic> item,
+  ) {
     setState(() {
       _currentEditItem = Map<String, dynamic>.from(item);
       _isEditingActivityItem = isActivityList;
@@ -156,29 +160,27 @@ class _ListScreenState extends State<ListScreen>
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     return SlideLayout(
       config: SlidePaneConfig(
-        backgroundColor: isDarkMode 
-            ? theme.scaffoldBackgroundColor 
+        backgroundColor: isDarkMode
+            ? theme.scaffoldBackgroundColor
             : const Color(0xFFFAFAFA),
-        headerBackgroundColor: isDarkMode 
-            ? theme.scaffoldBackgroundColor 
+        headerBackgroundColor: isDarkMode
+            ? theme.scaffoldBackgroundColor
             : const Color(0xFFFFFFFF),
-        headerTextColor: isDarkMode 
-            ? (theme.typography.body?.color ?? theme.inactiveColor) 
+        headerTextColor: isDarkMode
+            ? (theme.typography.body?.color ?? theme.inactiveColor)
             : const Color(0xFF1F2937),
-        footerBackgroundColor: isDarkMode 
-            ? theme.scaffoldBackgroundColor 
+        footerBackgroundColor: isDarkMode
+            ? theme.scaffoldBackgroundColor
             : const Color(0xFFFFFFFF),
-        borderColor: isDarkMode 
-            ? theme.resources.dividerStrokeColorDefault 
+        borderColor: isDarkMode
+            ? theme.resources.dividerStrokeColorDefault
             : const Color(0xFFE5E7EB),
-        shadowColor: isDarkMode 
-            ? theme.shadowColor 
-            : const Color(0x0F000000),
-        overlayColor: isDarkMode 
-            ? theme.resources.layerOnMicaBaseAltFillColorDefault 
+        shadowColor: isDarkMode ? theme.shadowColor : const Color(0x0F000000),
+        overlayColor: isDarkMode
+            ? theme.resources.layerOnMicaBaseAltFillColorDefault
             : const Color(0x40000000),
       ),
       isVisible: _showEditPanel,
@@ -188,39 +190,36 @@ class _ListScreenState extends State<ListScreen>
         });
       },
       paneBuilder: (context, closePane) => _buildEditPanel(closePane),
-      mainContent: Column(
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TabSwitch(
-              selectedIndex: _tabController.index,
-              onChanged: (index) {
-                setState(() {
-                  _tabController.index = index;
-                });
-              },
-              items: const [
-                TabSwitchItem(
-                  label: '活动清单',
-                  icon: FluentIcons.group_list,
-                ),
-                TabSwitchItem(
-                  label: '专注清单',
-                  icon: FluentIcons.favorite_list,
-                ),
-              ],
+      mainContent: Container(
+        decoration: BoxDecoration(color: theme.accentColor.lightest),
+        child: Column(
+          children: <Widget>[
+            AppBar(title: const Text('清单')),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TabSwitch(
+                selectedIndex: _tabController.index,
+                onChanged: (index) {
+                  setState(() {
+                    _tabController.index = index;
+                  });
+                },
+                items: const [
+                  TabSwitchItem(label: '活动清单', icon: FluentIcons.group_list),
+                  TabSwitchItem(label: '专注清单', icon: FluentIcons.favorite_list),
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: _tabController.index == 0
-                ? _buildTodoListTab(true)
-                : _buildTodoListTab(false),
-          ),
-        ],
+            Expanded(
+              child: _tabController.index == 0
+                  ? _buildTodoListTab(true)
+                  : _buildTodoListTab(false),
+            ),
+          ],
+        ),
       ),
     );
   }
-
 
   Widget _buildEditPanel(VoidCallback closePane) {
     if (_currentEditItem == null) {
@@ -240,8 +239,12 @@ class _ListScreenState extends State<ListScreen>
         setState(() {
           _currentEditItem = updatedTask;
           // 同步更新列表中的对应项目
-          final targetList = _isEditingActivityItem ? _activityList : _focusList;
-          final index = targetList.indexWhere((item) => item['id'] == updatedTask['id']);
+          final targetList = _isEditingActivityItem
+              ? _activityList
+              : _focusList;
+          final index = targetList.indexWhere(
+            (item) => item['id'] == updatedTask['id'],
+          );
           if (index != -1) {
             targetList[index] = Map<String, dynamic>.from(updatedTask);
           }
@@ -252,7 +255,10 @@ class _ListScreenState extends State<ListScreen>
   }
 
   Widget _buildListItem(
-      Map<String, dynamic> item, bool isActivityList, bool isDone) {
+    Map<String, dynamic> item,
+    bool isActivityList,
+    bool isDone,
+  ) {
     final FlyoutController controller = FlyoutController();
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2.0),
@@ -265,37 +271,40 @@ class _ListScreenState extends State<ListScreen>
         child: GestureDetector(
           onSecondaryTapUp: (details) {
             _showItemContextMenu(
-                context,
-                details.globalPosition,
-                item,
-                isActivityList,
-                isDone,
-                controller);
+              context,
+              details.globalPosition,
+              item,
+              isActivityList,
+              isDone,
+              controller,
+            );
           },
           child: ListTile(
-          leading: HoverCheckbox(
-            value: isDone,
-            onChanged: (value) => _toggleItemDone(item),
-          ),
-          title: Text(
-            item['name'] as String? ?? '!!!未知任务',
-            style: TextStyle(
-              decoration: isDone ? TextDecoration.lineThrough : null,
+            leading: HoverCheckbox(
+              value: isDone,
+              onChanged: (value) => _toggleItemDone(item),
             ),
+            title: Text(
+              item['name'] as String? ?? '!!!未知任务',
+              style: TextStyle(
+                decoration: isDone ? TextDecoration.lineThrough : null,
+              ),
+            ),
+            onPressed: () => _showEditItemPanel(context, isActivityList, item),
+            trailing: isActivityList || isDone
+                ? null
+                : IconButton(
+                    icon: const Icon(FluentIcons.play),
+                    onPressed: () {
+                      Provider.of<TimerModel>(
+                        context,
+                        listen: false,
+                      ).setCurrentTaskName(item['name']);
+                      Provider.of<TimerModel>(context, listen: false).start();
+                      switchToFoucsScreen?.call();
+                    },
+                  ),
           ),
-          onPressed: () => _showEditItemPanel(context, isActivityList, item),
-          trailing: isActivityList || isDone
-              ? null
-              : IconButton(
-                  icon: const Icon(FluentIcons.play),
-                  onPressed: () {
-                    Provider.of<TimerModel>(context, listen: false)
-                        .setCurrentTaskName(item['name']);
-                    Provider.of<TimerModel>(context, listen: false).start();
-                    switchToFoucsScreen?.call();
-                  },
-                ),
-        ),
         ),
       ),
     );
@@ -330,8 +339,14 @@ class _ListScreenState extends State<ListScreen>
     );
   }
 
-  void _showItemContextMenu(BuildContext context, Offset position,
-      Map<String, dynamic> item, bool isActivityList, bool isDone, FlyoutController controller) {
+  void _showItemContextMenu(
+    BuildContext context,
+    Offset position,
+    Map<String, dynamic> item,
+    bool isActivityList,
+    bool isDone,
+    FlyoutController controller,
+  ) {
     controller.showFlyout(
       barrierColor: Colors.transparent,
       builder: (context) {
@@ -365,16 +380,16 @@ class _ListScreenState extends State<ListScreen>
     );
   }
 
-
-
   // 移动项目到其他列表
   void _moveItemToOtherList() {
     if (_currentEditItem == null) return;
-    
+
     setState(() {
       if (_isEditingActivityItem) {
         // 从活动列表移动到专注列表
-        _activityList.removeWhere((item) => item['id'] == _currentEditItem!['id']);
+        _activityList.removeWhere(
+          (item) => item['id'] == _currentEditItem!['id'],
+        );
         _focusList.add(_currentEditItem!);
       } else {
         // 从专注列表移动到活动列表
@@ -390,10 +405,12 @@ class _ListScreenState extends State<ListScreen>
   // 删除当前项目
   void _deleteCurrentItem() {
     if (_currentEditItem == null) return;
-    
+
     setState(() {
       if (_isEditingActivityItem) {
-        _activityList.removeWhere((item) => item['id'] == _currentEditItem!['id']);
+        _activityList.removeWhere(
+          (item) => item['id'] == _currentEditItem!['id'],
+        );
       } else {
         _focusList.removeWhere((item) => item['id'] == _currentEditItem!['id']);
       }
@@ -440,10 +457,7 @@ class _ListScreenState extends State<ListScreen>
         padding: const EdgeInsets.all(8.0),
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(FluentIcons.add),
-              onPressed: addItem,
-            ),
+            IconButton(icon: const Icon(FluentIcons.add), onPressed: addItem),
             Expanded(
               child: TextBox(
                 controller: controller,
@@ -451,10 +465,7 @@ class _ListScreenState extends State<ListScreen>
                 onSubmitted: (_) => addItem(),
               ),
             ),
-            IconButton(
-              icon: const Icon(FluentIcons.send),
-              onPressed: addItem,
-            ),
+            IconButton(icon: const Icon(FluentIcons.send), onPressed: addItem),
           ],
         ),
       ),
