@@ -6,6 +6,7 @@ import '../features/list.dart';
 import '../utils/logger.dart';
 import '../widgets/slide_pane.dart';
 import '../widgets/task_view.dart';
+import '../widgets/tab_switcher.dart';
 
 VoidCallback? switchToFoucsScreen;
 
@@ -177,14 +178,23 @@ class _ListScreenState extends State<ListScreen>
         children: <Widget>[
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: ToggleSwitch(
-              checked: _tabController.index == 1,
-              onChanged: (value) {
+            child: TabSwitcher(
+              selectedIndex: _tabController.index,
+              onChanged: (index) {
                 setState(() {
-                  _tabController.index = value ? 1 : 0;
+                  _tabController.index = index;
                 });
               },
-              content: Text(_tabController.index == 0 ? '活动清单' : '专注清单'),
+              items: const [
+                TabSwitcherItem(
+                  label: '活动清单',
+                  icon: FluentIcons.task_list,
+                ),
+                TabSwitcherItem(
+                  label: '专注清单',
+                  icon: FluentIcons.focus,
+                ),
+              ],
             ),
           ),
           Expanded(
