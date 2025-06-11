@@ -6,7 +6,7 @@ import '../features/list.dart';
 import '../utils/logger.dart';
 import '../widgets/slide_pane.dart';
 import '../widgets/task_view.dart';
-import '../widgets/tab_switcher.dart';
+import '../widgets/tab_switch.dart';
 
 VoidCallback? switchToFoucsScreen;
 
@@ -58,7 +58,7 @@ class _ListScreenState extends State<ListScreen>
             {'name': '活动列表加载失败', 'id': 'error', 'done': false}
           ];
           _focusList = [
-            {'name': '今日待办加载失败', 'id': 'error', 'done': false}
+            {'name': '专注列表加载失败', 'id': 'error', 'done': false}
           ];
           _isLoading = false;
         });
@@ -178,7 +178,7 @@ class _ListScreenState extends State<ListScreen>
         children: <Widget>[
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: TabSwitcher(
+            child: TabSwitch(
               selectedIndex: _tabController.index,
               onChanged: (index) {
                 setState(() {
@@ -186,13 +186,13 @@ class _ListScreenState extends State<ListScreen>
                 });
               },
               items: const [
-                TabSwitcherItem(
+                TabSwitchItem(
                   label: '活动清单',
-                  icon: FluentIcons.task_list,
+                  icon: FluentIcons.group_list,
                 ),
-                TabSwitcherItem(
+                TabSwitchItem(
                   label: '专注清单',
-                  icon: FluentIcons.focus,
+                  icon: FluentIcons.favorite_list,
                 ),
               ],
             ),

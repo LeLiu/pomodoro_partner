@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart' hide Colors;
 import 'package:fluent_ui/fluent_ui.dart';
 
-class TabSwitcher extends StatefulWidget {
+class TabSwitch extends StatefulWidget {
   final int selectedIndex;
   final ValueChanged<int> onChanged;
-  final List<TabSwitcherItem> items;
+  final List<TabSwitchItem> items;
 
-  const TabSwitcher({
+  const TabSwitch({
     super.key,
     required this.selectedIndex,
     required this.onChanged,
@@ -14,10 +14,10 @@ class TabSwitcher extends StatefulWidget {
   });
 
   @override
-  State<TabSwitcher> createState() => _TabSwitcherState();
+  State<TabSwitch> createState() => _TabSwitchState();
 }
 
-class _TabSwitcherState extends State<TabSwitcher>
+class _TabSwitchState extends State<TabSwitch>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _slideAnimation;
@@ -39,7 +39,7 @@ class _TabSwitcherState extends State<TabSwitcher>
   }
 
   @override
-  void didUpdateWidget(TabSwitcher oldWidget) {
+  void didUpdateWidget(TabSwitch oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.selectedIndex != widget.selectedIndex) {
       _animationController.forward(from: 0.0);
@@ -59,11 +59,11 @@ class _TabSwitcherState extends State<TabSwitcher>
 
     return Center(
       child: Container(
-        width: 240, // 固定宽度，参考上一版大小
+        width: 240,
         decoration: BoxDecoration(
           color: isDarkMode
-              ? const Color(0xFF2D2D30) // 稍微浅一点的暗色背景
-              : const Color(0xFFF8F9FA), // 稍微浅一点的亮色背景
+              ? const Color(0xFF2D2D30) 
+              : const Color(0xFFF8F9FA),
           borderRadius: BorderRadius.circular(4.0),
           border: Border.all(
             color: isDarkMode
@@ -89,11 +89,11 @@ class _TabSwitcherState extends State<TabSwitcher>
                       : const Color(0xFF0078D4),
                   borderRadius: BorderRadius.circular(2.0),
                   boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF0078D4).withOpacity(0.2),
-                      blurRadius: 3.0,
-                      offset: const Offset(0, 1),
-                    ),
+                    // BoxShadow(
+                    //   color: const Color(0xFF0078D4).withValues(alpha: 0.2),
+                    //   blurRadius: 3.0,
+                    //   offset: const Offset(0, 1),
+                    // ),
                   ],
                 ),
               ),
@@ -159,11 +159,11 @@ class _TabSwitcherState extends State<TabSwitcher>
   }
 }
 
-class TabSwitcherItem {
+class TabSwitchItem {
   final String label;
   final IconData icon;
 
-  const TabSwitcherItem({
+  const TabSwitchItem({
     required this.label,
     required this.icon,
   });

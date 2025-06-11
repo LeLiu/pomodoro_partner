@@ -151,10 +151,13 @@ class _TaskViewState extends State<TaskView> {
   }
 
   Widget _buildBody(BuildContext context) {
+    final scrollController = ScrollController();
     return Expanded(
       child: Scrollbar(
+        controller: scrollController,
         thumbVisibility: true,
         child: SingleChildScrollView(
+          controller: scrollController,
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
