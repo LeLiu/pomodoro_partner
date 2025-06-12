@@ -25,8 +25,8 @@ class _ListScreenState extends State<ListScreen>
   List<TaskListItem> _focusList = [];
   late TabController _tabController;
   bool _isLoading = true;
-  bool _showEditPanel = false;
-  TaskListItem? _currentEditItem;
+  bool _showItemPane = false;
+  TaskListItem? _currentItem;
   bool _isEditingActivityItem = false;
 
   @override
@@ -91,33 +91,20 @@ class _ListScreenState extends State<ListScreen>
     }
   }
 
-  void _toggleItemDone(TaskListItem item) {
+  void _toggleItemDone(TaskListItem item, bool done) {
     if (!mounted) return;
-    setState(() {
-      final bool currentDone = item.status == 'completed';
-      item.status = !currentDone ? 'completed' : 'pending';
-      item.updatedAt = DateTime.now();
-      if (!currentDone) {
-        item.completedAt = DateTime.now();
-      } else {
-        item.completedAt = null;
-      }
 
-      // 如果当前编辑的是同一个项目，同步更新编辑面板中的数据
-      if (_currentEditItem != null /*&& _currentEditItem!.id == item.id*/) {
-        // 创建一个新的TaskListItem对象来触发TaskView的重建
-        _currentEditItem = TaskListItem(
-          id: item.id,
-          name: item.name,
-          desc: item.desc,
-          status: item.status,
-          createdAt: item.createdAt,
-          updatedAt: item.updatedAt,
-          completedAt: item.completedAt,
-          plannedFocusCount: item.plannedFocusCount,
-          completedFocusCount: item.completedFocusCount,
-        );
-      }
+    if (done) {
+      item.status = 'completed';
+      item.completedAt = DateTime.now();
+    } else {
+      item.status = item.completedFocusCount > 0 ? 'active' : 'pending';
+      item.updatedAt = DateTime.now();
+      item.completedAt = null;
+    }
+
+    setState(() {
+      _currentItem = item;
     });
     _saveLists();
   }
@@ -146,15 +133,15 @@ class _ListScreenState extends State<ListScreen>
     }
   }
 
-  void _showEditItemPanel(
+  void _showTaskItemPane(
     BuildContext context,
     bool isActivityList,
     TaskListItem item,
   ) {
     setState(() {
-      _currentEditItem = item;
+      _currentItem = item;
       _isEditingActivityItem = isActivityList;
-      _showEditPanel = true;
+      _showItemPane = true;
     });
   }
 
@@ -191,13 +178,13 @@ class _ListScreenState extends State<ListScreen>
             ? theme.resources.layerOnMicaBaseAltFillColorDefault
             : const Color(0x40000000),
       ),
-      isVisible: _showEditPanel,
+      isVisible: _showItemPane,
       onVisibilityChanged: (visible) {
         setState(() {
-          _showEditPanel = visible;
+          _showItemPane = visible;
         });
       },
-      paneBuilder: (context, closePane) => _buildEditPanel(closePane),
+      paneBuilder: (context, closePane) => _buildTaskItemPane(closePane),
       mainContent: Container(
         decoration: BoxDecoration(color: theme.accentColor.lightest),
         child: Column(
@@ -220,8 +207,8 @@ class _ListScreenState extends State<ListScreen>
             ),
             Expanded(
               child: _tabController.index == 0
-                  ? _buildTodoListTab(true)
-                  : _buildTodoListTab(false),
+                  ? _buildTabList(true)
+                  : _buildTabList(false),
             ),
           ],
         ),
@@ -229,13 +216,14 @@ class _ListScreenState extends State<ListScreen>
     );
   }
 
-  Widget _buildEditPanel(VoidCallback closePane) {
-    if (_currentEditItem == null) {
+  Widget _buildTaskItemPane(VoidCallback closePane) {
+    if (_currentItem == null) {
       return const Center(child: Text('没有选中的任务'));
     }
 
     return TaskView(
-      taskItem: _currentEditItem!,
+      key: UniqueKey(),
+      taskItem: _currentItem!,
       isActivityItem: _isEditingActivityItem,
       onMoveToOtherList: _moveItemToOtherList,
       onDelete: () {
@@ -245,7 +233,7 @@ class _ListScreenState extends State<ListScreen>
       onClose: closePane,
       onTaskUpdate: (updatedTask) {
         setState(() {
-          _currentEditItem = updatedTask;
+          _currentItem = updatedTask;
           // 同步更新列表中的对应项目
           final targetList = _isEditingActivityItem
               ? _activityList
@@ -290,7 +278,7 @@ class _ListScreenState extends State<ListScreen>
           child: ListTile(
             leading: HoverCheckbox(
               value: isDone,
-              onChanged: (value) => _toggleItemDone(item),
+              onChanged: (value) => _toggleItemDone(item, value),
             ),
             title: Text(
               item.name,
@@ -298,7 +286,7 @@ class _ListScreenState extends State<ListScreen>
                 decoration: isDone ? TextDecoration.lineThrough : null,
               ),
             ),
-            onPressed: () => _showEditItemPanel(context, isActivityList, item),
+            onPressed: () => _showTaskItemPane(context, isActivityList, item),
             trailing: isActivityList || isDone
                 ? null
                 : IconButton(
@@ -318,14 +306,15 @@ class _ListScreenState extends State<ListScreen>
     );
   }
 
-  Widget _buildTodoListTab(bool isActivityList) {
-    var todoList = isActivityList ? _activityList : _focusList;
+  Widget _buildTabList(bool isActivityList) {
+    var list = isActivityList ? _activityList : _focusList;
     if (_isLoading) return const Center(child: ProgressRing());
-    if (todoList.isEmpty) {
+    if (list.isEmpty) {
+      // TODO should return a empty page here
       return Column(
         children: [
-          const Center(child: Text('没有专注事项')),
-          _buildAddItemInput(false),
+          const Center(child: Text('没有任务')),
+          _buildItemAdder(isActivityList),
         ],
       );
     }
@@ -334,15 +323,15 @@ class _ListScreenState extends State<ListScreen>
       children: [
         Expanded(
           child: ListView.builder(
-            itemCount: todoList.length,
+            itemCount: list.length,
             itemBuilder: (context, index) {
-              final item = todoList[index];
+              final item = list[index];
               final bool isDone = item.status == 'completed';
               return _buildListItem(item, isActivityList, isDone);
             },
           ),
         ),
-        _buildAddItemInput(isActivityList),
+        _buildItemAdder(isActivityList),
       ],
     );
   }
@@ -363,14 +352,14 @@ class _ListScreenState extends State<ListScreen>
             MenuFlyoutItem(
               text: Text(isDone ? '标记为未完成' : '标记为完成'),
               onPressed: () {
-                _toggleItemDone(item);
+                _toggleItemDone(item, isDone);
                 controller.close();
               },
             ),
             MenuFlyoutItem(
               text: const Text('编辑'),
               onPressed: () {
-                _showEditItemPanel(context, isActivityList, item);
+                _showTaskItemPane(context, isActivityList, item);
                 controller.close();
               },
             ),
@@ -390,45 +379,45 @@ class _ListScreenState extends State<ListScreen>
 
   // 移动项目到其他列表
   void _moveItemToOtherList() {
-    if (_currentEditItem == null) return;
+    if (_currentItem == null) return;
 
     setState(() {
       if (_isEditingActivityItem) {
         // 从活动列表移动到专注列表
         _activityList.removeWhere(
-          (item) => item.id == _currentEditItem!.id,
+          (item) => item.id == _currentItem!.id,
         );
-        _focusList.add(_currentEditItem!);
+        _focusList.add(_currentItem!);
       } else {
         // 从专注列表移动到活动列表
-        _focusList.removeWhere((item) => item.id == _currentEditItem!.id);
-        _activityList.add(_currentEditItem!);
+        _focusList.removeWhere((item) => item.id == _currentItem!.id);
+        _activityList.add(_currentItem!);
       }
-      _currentEditItem!.updatedAt = DateTime.now();
-      _showEditPanel = false;
+      _currentItem!.updatedAt = DateTime.now();
+      _showItemPane = false;
     });
     _saveLists();
   }
 
   // 删除当前项目
   void _deleteCurrentItem() {
-    if (_currentEditItem == null) return;
+    if (_currentItem == null) return;
 
     setState(() {
       if (_isEditingActivityItem) {
         _activityList.removeWhere(
-          (item) => item.id == _currentEditItem!.id,
+          (item) => item.id == _currentItem!.id,
         );
       } else {
-        _focusList.removeWhere((item) => item.id == _currentEditItem!.id);
+        _focusList.removeWhere((item) => item.id == _currentItem!.id);
       }
-      _currentEditItem = null;
-      _showEditPanel = false;
+      _currentItem = null;
+      _showItemPane = false;
     });
     _saveLists();
   }
 
-  Widget _buildAddItemInput(bool isActivityList) {
+  Widget _buildItemAdder(bool isActivityList) {
     final TextEditingController controller = TextEditingController();
 
     void addItem() {

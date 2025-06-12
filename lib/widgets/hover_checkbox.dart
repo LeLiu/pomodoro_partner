@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 
 class HoverCheckbox extends StatefulWidget {
-  final ValueChanged<bool?> onChanged;
+  final ValueChanged<bool> onChanged;
   final bool value;
   final double iconSize;
 
