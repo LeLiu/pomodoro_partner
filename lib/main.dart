@@ -15,11 +15,15 @@ import './screens/focus.dart';
 import './models/timer.dart';
 import './utils/logger.dart';
 import './features/list.dart';
+import './services/bing_image.dart';
 
 Future<void> _initializeApp() async {
   WidgetsFlutterBinding.ensureInitialized();
   AppLogger.initialize(level: Level.all);
   TaskListManager.initialize();
+  
+  // 初始化Bing图片服务
+  BingImageService.initialize();
 
   // if it's not on the web, windows or android, load the accent color
   if (!kIsWeb &&

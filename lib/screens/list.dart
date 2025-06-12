@@ -9,6 +9,8 @@ import '../widgets/slide_pane.dart';
 import '../widgets/task_view.dart';
 import '../widgets/tab_switch.dart';
 import '../widgets/hover_checkbox.dart';
+import '../services/bing_image.dart';
+import 'dart:io';
 
 VoidCallback? switchToFoucsScreen;
 
@@ -28,12 +30,28 @@ class _ListScreenState extends State<ListScreen>
   bool _showItemPane = false;
   TaskListItem? _currentItem;
   bool _isEditingActivityItem = false;
+  File? _backgroundImage;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadLists();
+    _loadBackgroundImage();
+  }
+  
+  Future<void> _loadBackgroundImage() async {
+    try {
+      final bingService = BingImageService();
+      final latestImage = await bingService.getLatestBackgroundImage();
+      if (mounted) {
+        setState(() {
+          _backgroundImage = latestImage;
+        });
+      }
+    } catch (e) {
+      AppLogger.logger.e('加载背景图片失败: $e');
+    }
   }
 
   Future<void> _loadLists() async {
@@ -186,10 +204,41 @@ class _ListScreenState extends State<ListScreen>
       },
       paneBuilder: (context, closePane) => _buildTaskItemPane(closePane),
       mainContent: Container(
-        decoration: BoxDecoration(color: theme.accentColor.lightest),
-        child: Column(
-          children: <Widget>[
-            AppBar(title: const Text('清单')),
+        padding: EdgeInsets.symmetric(vertical: 30.0, horizontal: 20.0),
+        decoration: BoxDecoration(
+          image: _backgroundImage != null
+              ? DecorationImage(
+                  image: FileImage(_backgroundImage!),
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                    Colors.black.withValues(alpha: 0.3),
+                    BlendMode.darken,
+                  ),
+                )
+              : DecorationImage(
+                  image: const AssetImage('assets/default_bg.jpg'),
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                    Colors.black.withValues(alpha: 0.3),
+                    BlendMode.darken,
+                  ),
+                ),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+          ),
+          child: Column(
+            children: <Widget>[
+              AppBar(
+                title: Row(
+                  children:[ 
+                  Icon(FluentIcons.task_list,color: Colors.white,),
+                  SizedBox(width: 10,),
+                  const Text('清单'),
+                  ]),
+              titleTextStyle: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
+              backgroundColor: Colors.transparent,),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: TabSwitch(
@@ -212,6 +261,7 @@ class _ListScreenState extends State<ListScreen>
             ),
           ],
         ),
+      ),
       ),
     );
   }
