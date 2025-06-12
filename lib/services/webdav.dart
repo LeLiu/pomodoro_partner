@@ -15,6 +15,7 @@ class WebdavService {
   late String _path;
 
   final _logger = AppLogger.forClass(WebdavService);
+  final _timeoutDuration = 2000; // milliseconds
 
   WebdavService(String host, String user, String password, String path) {
     _createWebDavClient(host, user, password, path);
@@ -34,9 +35,9 @@ class WebdavService {
     _client = webdav.newClient(host, user: user, password: password);
 
     _client.setHeaders({'accept-charset': 'utf-8'});
-    _client.setConnectTimeout(8000);
-    _client.setSendTimeout(8000);
-    _client.setReceiveTimeout(8000);
+    _client.setConnectTimeout(_timeoutDuration);
+    _client.setSendTimeout(_timeoutDuration);
+    _client.setReceiveTimeout(_timeoutDuration);
 
     _path = path;
   }

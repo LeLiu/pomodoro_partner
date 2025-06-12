@@ -12,11 +12,11 @@ import './app/theme.dart';
 import './screens/settings.dart';
 import './screens/list.dart';
 import './screens/focus.dart';
-
+import './models/timer.dart';
 import './utils/logger.dart';
 import './features/list.dart';
 
-void main() async {
+Future<void> _initializeApp() async {
   WidgetsFlutterBinding.ensureInitialized();
   AppLogger.initialize(level: Level.all);
   TaskListManager.initialize();
@@ -47,6 +47,9 @@ void main() async {
       await windowManager.setSkipTaskbar(false);
     });
   }
+}
+void main() async {
+ await _initializeApp();
   runApp(const PomodoroPartnerApp());
 
   // Future.wait([
@@ -358,6 +361,17 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
     }
     return DragToMoveArea(child: title);
   }
+
+  Future<void> _cleanupResources() async {
+  try {
+    // 停止定时器
+    final timerModel = Provider.of<TimerModel>(context, listen: false);
+    timerModel.pause();
+    timerModel.dispose();
+  } catch (e) {
+    // TODO should log
+  }
+}
 }
 
 class WindowButtons extends StatelessWidget {
