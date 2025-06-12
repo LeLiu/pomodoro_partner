@@ -89,6 +89,7 @@ class PomodoroPartnerApp extends StatelessWidget {
             brightness: Brightness.dark,
             accentColor: appTheme.color,
             visualDensity: VisualDensity.standard,
+            fontFamily: 'Microsoft YaHei',
             focusTheme: FocusThemeData(
               glowFactor: is10footScreen(context) ? 2.0 : 0.0,
             ),
@@ -96,6 +97,7 @@ class PomodoroPartnerApp extends StatelessWidget {
           theme: FluentThemeData(
             accentColor: appTheme.color,
             visualDensity: VisualDensity.standard,
+            fontFamily: 'Microsoft YaHei',
             focusTheme: FocusThemeData(
               glowFactor: is10footScreen(context) ? 2.0 : 0.0,
             ),
@@ -146,20 +148,20 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
       <NavigationPaneItem>[
         PaneItem(
           key: const ValueKey('/list'),
-          icon: const Icon(FluentIcons.task_list),
-          title: const Text('清单'),
+          icon: const Icon(FluentIcons.task_list, size: 18, color: Color.fromARGB(255, 209, 128, 255)),
+          title: const Text(' 任务清单', style: TextStyle(fontSize: 14)),
           body: const SizedBox.shrink(),
         ),
         PaneItem(
           key: const ValueKey('/focus'),
-          icon: const Icon(FluentIcons.timer),
-          title: const Text('专注'),
+          icon: const Icon(FluentIcons.timer, size: 18),
+          title: const Text(' 番茄专注', style: TextStyle(fontSize: 14)),
           body: const SizedBox.shrink(),
         ),
         PaneItem(
           key: const ValueKey('/statistics'),
-          icon: const Icon(FluentIcons.summary_chart),
-          title: const Text('统计'),
+          icon: const Icon(FluentIcons.summary_chart, size: 18),
+          title: const Text(' 统计数据', style: TextStyle(fontSize: 14)),
           body: const SizedBox.shrink(),
         ),
       ].map<NavigationPaneItem>((item) {
@@ -261,6 +263,7 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
       pane: NavigationPane(
         selected: _calculateSelectedIndex(context),
         size: const NavigationPaneSize(openWidth: 200.0),
+        header:SizedBox(height: 20),
         // header: SizedBox(
         //   //height: kOneLineTileHeight,
         //   height: 50,
