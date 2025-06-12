@@ -2,7 +2,7 @@ import 'package:flutter/material.dart'
     hide Colors, IconButton, Checkbox, ListTile, FilledButton;
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:provider/provider.dart';
-import '../models/timer.dart';
+//import '../models/timer_model.dart';
 import '../features/list.dart';
 import '../utils/logger.dart';
 import '../widgets/slide_pane.dart';
@@ -21,12 +21,12 @@ class ListScreen extends StatefulWidget {
 
 class _ListScreenState extends State<ListScreen>
     with SingleTickerProviderStateMixin {
-  List<Map<String, dynamic>> _activityList = [];
-  List<Map<String, dynamic>> _focusList = [];
+  List<TaskListItem> _activityList = [];
+  List<TaskListItem> _focusList = [];
   late TabController _tabController;
   bool _isLoading = true;
   bool _showEditPanel = false;
-  Map<String, dynamic>? _currentEditItem;
+  TaskListItem? _currentEditItem;
   bool _isEditingActivityItem = false;
 
   @override
@@ -42,13 +42,11 @@ class _ListScreenState extends State<ListScreen>
       _isLoading = true;
     });
     try {
-      final todoList = await TaskListManager.syncAndLoadList();
+      final taskList = await TaskListManager.syncAndLoadList();
       if (mounted) {
         setState(() {
-          _activityList = List<Map<String, dynamic>>.from(
-            todoList.activityList,
-          );
-          _focusList = List<Map<String, dynamic>>.from(todoList.focusList);
+          _activityList = taskList.activityList;
+          _focusList = taskList.focusList;
           _isLoading = false;
         });
       }
@@ -58,10 +56,11 @@ class _ListScreenState extends State<ListScreen>
       if (mounted) {
         setState(() {
           _activityList = [
-            {'name': '活动列表加载失败', 'id': 'error', 'status': 'pending'},
+            TaskListItem.fromMap({'name': '活动加载失败', 'id': 'error', 'status': 'pending'}),
           ];
-          _focusList = [
-            {'name': '专注列表加载失败', 'id': 'error', 'status': 'pending'},
+          _focusList = 
+          [
+            TaskListItem.fromMap({'name': '专注列表加载失败', 'id': 'error', 'status': 'pending'}),
           ];
           _isLoading = false;
         });
@@ -92,45 +91,45 @@ class _ListScreenState extends State<ListScreen>
     }
   }
 
-  void _toggleItemDone(Map<String, dynamic> item) {
+  void _toggleItemDone(TaskListItem item) {
     if (!mounted) return;
     setState(() {
-      final bool currentDone = item['status'] == 'completed';
-      item['status'] = !currentDone ? 'completed' : 'pending';
-      item['updatedAt'] = DateTime.now().toIso8601String();
+      final bool currentDone = item.status == 'completed';
+      item.status = !currentDone ? 'completed' : 'pending';
+      item.updatedAt = DateTime.now();
       if (!currentDone) {
-        item['completedAt'] = DateTime.now().toIso8601String();
+        item.completedAt = DateTime.now();
       } else {
-        item['completedAt'] = null;
+        item.completedAt = null;
       }
 
       // 如果当前编辑的是同一个项目，同步更新编辑面板中的数据
-      if (_currentEditItem != null && _currentEditItem!['id'] == item['id']) {
-        _currentEditItem!['status'] = item['status'];
-        _currentEditItem!['updatedAt'] = item['updatedAt'];
-        _currentEditItem!['completedAt'] = item['completedAt'];
+      if (_currentEditItem != null && _currentEditItem!.id == item.id) {
+        _currentEditItem!.status = item.status;
+        _currentEditItem!.updatedAt = item.updatedAt;
+        _currentEditItem!.completedAt = item.completedAt;
       }
     });
     _saveLists();
   }
 
-  void _deleteActivityItem(Map<String, dynamic> item) {
+  void _deleteActivityItem(TaskListItem item) {
     if (!mounted) return;
     setState(() {
-      _activityList.removeWhere((element) => element['id'] == item['id']);
+      _activityList.removeWhere((element) => element.id == item.id);
     });
     _saveLists();
   }
 
-  void _deleteFocusItem(Map<String, dynamic> item) {
+  void _deleteFocusItem(TaskListItem item) {
     if (!mounted) return;
     setState(() {
-      _focusList.removeWhere((element) => element['id'] == item['id']);
+      _focusList.removeWhere((element) => element.id == item.id);
     });
     _saveLists();
   }
 
-  void _deleteItem(Map<String, dynamic> item, bool isActivityList) {
+  void _deleteItem(TaskListItem item, bool isActivityList) {
     if (isActivityList) {
       _deleteActivityItem(item);
     } else {
@@ -141,10 +140,10 @@ class _ListScreenState extends State<ListScreen>
   void _showEditItemPanel(
     BuildContext context,
     bool isActivityList,
-    Map<String, dynamic> item,
+    TaskListItem item,
   ) {
     setState(() {
-      _currentEditItem = Map<String, dynamic>.from(item);
+      _currentEditItem = item;
       _isEditingActivityItem = isActivityList;
       _showEditPanel = true;
     });
@@ -243,10 +242,10 @@ class _ListScreenState extends State<ListScreen>
               ? _activityList
               : _focusList;
           final index = targetList.indexWhere(
-            (item) => item['id'] == updatedTask['id'],
+            (item) => item.id == updatedTask.id,
           );
           if (index != -1) {
-            targetList[index] = Map<String, dynamic>.from(updatedTask);
+            targetList[index] = updatedTask;
           }
         });
         _saveLists();
@@ -255,7 +254,7 @@ class _ListScreenState extends State<ListScreen>
   }
 
   Widget _buildListItem(
-    Map<String, dynamic> item,
+    TaskListItem item,
     bool isActivityList,
     bool isDone,
   ) {
@@ -285,7 +284,7 @@ class _ListScreenState extends State<ListScreen>
               onChanged: (value) => _toggleItemDone(item),
             ),
             title: Text(
-              item['name'] as String? ?? '!!!未知任务',
+              item.name,
               style: TextStyle(
                 decoration: isDone ? TextDecoration.lineThrough : null,
               ),
@@ -296,12 +295,12 @@ class _ListScreenState extends State<ListScreen>
                 : IconButton(
                     icon: const Icon(FluentIcons.play),
                     onPressed: () {
-                      Provider.of<TimerModel>(
-                        context,
-                        listen: false,
-                      ).setCurrentTaskName(item['name']);
-                      Provider.of<TimerModel>(context, listen: false).start();
-                      switchToFoucsScreen?.call();
+                      // Provider.of<TimerModel>(
+                      //   context,
+                      //   listen: false,
+                      // ).setCurrentTaskName(item.name);
+                      // Provider.of<TimerModel>(context, listen: false).start();
+                      // switchToFoucsScreen?.call();
                     },
                   ),
           ),
@@ -329,7 +328,7 @@ class _ListScreenState extends State<ListScreen>
             itemCount: todoList.length,
             itemBuilder: (context, index) {
               final item = todoList[index];
-              final bool isDone = item['status'] == 'completed';
+              final bool isDone = item.status == 'completed';
               return _buildListItem(item, isActivityList, isDone);
             },
           ),
@@ -342,7 +341,7 @@ class _ListScreenState extends State<ListScreen>
   void _showItemContextMenu(
     BuildContext context,
     Offset position,
-    Map<String, dynamic> item,
+    TaskListItem item,
     bool isActivityList,
     bool isDone,
     FlyoutController controller,
@@ -388,15 +387,15 @@ class _ListScreenState extends State<ListScreen>
       if (_isEditingActivityItem) {
         // 从活动列表移动到专注列表
         _activityList.removeWhere(
-          (item) => item['id'] == _currentEditItem!['id'],
+          (item) => item.id == _currentEditItem!.id,
         );
         _focusList.add(_currentEditItem!);
       } else {
         // 从专注列表移动到活动列表
-        _focusList.removeWhere((item) => item['id'] == _currentEditItem!['id']);
+        _focusList.removeWhere((item) => item.id == _currentEditItem!.id);
         _activityList.add(_currentEditItem!);
       }
-      _currentEditItem!['updatedAt'] = DateTime.now().toIso8601String();
+      _currentEditItem!.updatedAt = DateTime.now();
       _showEditPanel = false;
     });
     _saveLists();
@@ -409,10 +408,10 @@ class _ListScreenState extends State<ListScreen>
     setState(() {
       if (_isEditingActivityItem) {
         _activityList.removeWhere(
-          (item) => item['id'] == _currentEditItem!['id'],
+          (item) => item.id == _currentEditItem!.id,
         );
       } else {
-        _focusList.removeWhere((item) => item['id'] == _currentEditItem!['id']);
+        _focusList.removeWhere((item) => item.id == _currentEditItem!.id);
       }
       _currentEditItem = null;
       _showEditPanel = false;
@@ -425,16 +424,16 @@ class _ListScreenState extends State<ListScreen>
 
     void addItem() {
       if (controller.text.isNotEmpty) {
-        final newItem = {
-          'id': DateTime.now().millisecondsSinceEpoch.toString(),
-          'name': controller.text,
-          'desc': '',
-          'status': 'pending',
-          'createdAt': DateTime.now().toIso8601String(),
-          'updatedAt': DateTime.now().toIso8601String(),
-          'plannedFocusCount': 0,
-          'completedFocusCount': 0,
-        };
+        final newItem = TaskListItem(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          name: controller.text,
+          desc: '',
+          status: 'pending',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          plannedFocusCount: 0,
+          completedFocusCount: 0,
+        );
         setState(() {
           if (isActivityList) {
             _activityList.add(newItem);

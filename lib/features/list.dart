@@ -8,6 +8,61 @@ import '../services/webdav.dart';
 import './settings.dart';
 
 // status: pending, active, completed
+
+class TaskListItem {
+  String id;
+  String name;
+  String desc;
+  String status; // 'pending', 'active', 'completed'
+  DateTime createdAt;
+  DateTime updatedAt;
+  DateTime? completedAt;
+  int plannedFocusCount;
+  int completedFocusCount;
+
+  TaskListItem({
+    required this.id,
+    required this.name,
+    required this.desc,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    this.completedAt,
+    this.plannedFocusCount = 0,
+    this.completedFocusCount = 0,
+  });
+
+  factory TaskListItem.fromMap(Map<String, dynamic> map) {
+    return TaskListItem(
+      id: map['id'] as String,
+      name: map['name'] as String,
+      desc: map['desc'] as String,
+      status: map['status'] as String,
+      createdAt: DateTime.parse(map['createdAt'] as String),
+      updatedAt: DateTime.parse(map['updatedAt'] as String),
+      completedAt: map['completedAt'] == null
+          ? null
+          : DateTime.parse(map['completedAt'] as String),
+      plannedFocusCount: map['plannedFocusCount'] as int? ?? 0,
+      completedFocusCount: map['completedFocusCount'] as int? ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'desc': desc,
+      'status': status,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'completedAt': completedAt?.toIso8601String(),
+      'plannedFocusCount': plannedFocusCount,
+      'completedFocusCount': completedFocusCount,
+    };
+  }
+}
+
 final String defaultTaskListContent =
     '''
 {
@@ -63,11 +118,14 @@ final String defaultTaskListContent =
 ''';
 
 class TaskList {
-  late List<Map<String, dynamic>> activityList;
-  late List<Map<String, dynamic>> focusList;
+  late List<TaskListItem> activityList;
+  late List<TaskListItem> focusList;
 
   get allLists {
-    return {'activityList': activityList, 'focusList': focusList};
+    return {
+      'activityList': activityList.map((item) => item.toMap()).toList(),
+      'focusList': focusList.map((item) => item.toMap()).toList(),
+    };
   }
 
   TaskList() {
@@ -76,8 +134,12 @@ class TaskList {
   }
 
   TaskList.fromMap(Map<String, dynamic> map) {
-    activityList = List<Map<String, dynamic>>.from(map['activityList']);
-    focusList = List<Map<String, dynamic>>.from(map['focusList']);
+    activityList = (map['activityList'] as List)
+        .map((item) => TaskListItem.fromMap(item as Map<String, dynamic>))
+        .toList();
+    focusList = (map['focusList'] as List)
+        .map((item) => TaskListItem.fromMap(item as Map<String, dynamic>))
+        .toList();
   }
 }
 

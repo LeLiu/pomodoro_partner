@@ -1,11 +1,12 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import '../features/list.dart';
 import '../widgets/hover_checkbox.dart';
 import '../widgets/expander.dart';
 
 /// 任务编辑组件
 class TaskView extends StatefulWidget {
   /// 任务项数据
-  final Map<String, dynamic> taskItem;
+  final TaskListItem taskItem;
 
   /// 是否为活动列表中的任务
   final bool isActivityItem;
@@ -20,7 +21,7 @@ class TaskView extends StatefulWidget {
   final VoidCallback? onClose;
 
   /// 任务更新回调
-  final Function(Map<String, dynamic>)? onTaskUpdate;
+  final Function(TaskListItem)? onTaskUpdate;
 
   const TaskView({
     super.key,
@@ -65,8 +66,8 @@ class _TaskViewState extends State<TaskView> {
     // Check if the taskItem itself has changed or if its status has changed.
     // Using a simple check for 'id' and 'status' for now.
     // A more robust solution might involve deep comparison or a version/timestamp.
-    if (widget.taskItem['id'] != oldWidget.taskItem['id'] || 
-        widget.taskItem['status'] != oldWidget.taskItem['status']) {
+    if (widget.taskItem.id != oldWidget.taskItem.id || 
+        widget.taskItem.status != oldWidget.taskItem.status) {
       // If the taskItem has changed, re-initialize the state
       // First, remove old listeners if they were attached to focus nodes that might be disposed
       _nameFocusNode.removeListener(_onNameFocusChanged);
@@ -82,18 +83,18 @@ class _TaskViewState extends State<TaskView> {
   }
 
   void _initializeState() {
-    _originalName = widget.taskItem['name'] ?? '未知任务';
+    _originalName = widget.taskItem.name;
     _nameController = TextEditingController(text: _originalName);
     _nameFocusNode = FocusNode();
 
-    _originalDesc = widget.taskItem['desc'] ?? '';
+    _originalDesc = widget.taskItem.desc;
     _descController = TextEditingController(text: _originalDesc);
     _descFocusNode = FocusNode();
 
-    _isCompleted = widget.taskItem['status'] == 'completed';
-    _plannedFocusCount = widget.taskItem['plannedFocusCount'] ?? 0;
-    _completedFocusCount = widget.taskItem['completedFocusCount'] ?? 0;
-    _status = widget.taskItem['status'] ?? 'pending';
+    _isCompleted = widget.taskItem.status == 'completed';
+    _plannedFocusCount = widget.taskItem.plannedFocusCount;
+    _completedFocusCount = widget.taskItem.completedFocusCount;
+    _status = widget.taskItem.status;
   }
 
   @override
@@ -124,7 +125,9 @@ class _TaskViewState extends State<TaskView> {
     final newDescription = _descController.text.trim();
     if (newDescription != _originalDesc) {
       _originalDesc = newDescription;
-      _updateTask({'desc': newDescription});
+      widget.taskItem.desc = newDescription;
+      widget.taskItem.updatedAt = DateTime.now();
+      widget.onTaskUpdate?.call(widget.taskItem);
     }
   }
 
@@ -136,16 +139,13 @@ class _TaskViewState extends State<TaskView> {
     }
     if (newName != _originalName) {
       _originalName = newName;
-      _updateTask({'name': newName});
+      widget.taskItem.name = newName;
+      widget.taskItem.updatedAt = DateTime.now();
+      widget.onTaskUpdate?.call(widget.taskItem);
     }
   }
 
-  void _updateTask(Map<String, dynamic> updates) {
-    final updatedTask = Map<String, dynamic>.from(widget.taskItem);
-    updatedTask.addAll(updates);
-    updatedTask['updatedAt'] = DateTime.now().toIso8601String();
-    widget.onTaskUpdate?.call(updatedTask);
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -262,11 +262,12 @@ class _TaskViewState extends State<TaskView> {
                         ? 'completed'
                         : (_completedFocusCount > 0 ? 'active' : 'pending');
                   });
-                  _updateTask({
-                    'status': _status,
-                    if (_isCompleted)
-                      'completedAt': DateTime.now().toIso8601String(),
-                  });
+                  widget.taskItem.status = _status;
+                  if (_isCompleted) {
+                    widget.taskItem.completedAt = DateTime.now();
+                  }
+                  widget.taskItem.updatedAt = DateTime.now();
+                  widget.onTaskUpdate?.call(widget.taskItem);
                 },
               ),
             ],
@@ -284,7 +285,9 @@ class _TaskViewState extends State<TaskView> {
               final value = _nameController.text;
               _nameFocusNode.unfocus();
               if (value.trim() != _originalName) {
-                _updateTask({'name': value.trim()});
+                widget.taskItem.name = value.trim();
+                widget.taskItem.updatedAt = DateTime.now();
+                widget.onTaskUpdate?.call(widget.taskItem);
                 _originalName = value.trim();
               }
             },
@@ -380,7 +383,9 @@ class _TaskViewState extends State<TaskView> {
               setState(() {
                 _plannedFocusCount = index + 1;
               });
-              _updateTask({'plannedFocusCount': _plannedFocusCount});
+              widget.taskItem.plannedFocusCount = _plannedFocusCount;
+              widget.taskItem.updatedAt = DateTime.now();
+              widget.onTaskUpdate?.call(widget.taskItem);
             },
           ),
         ),
@@ -392,7 +397,9 @@ class _TaskViewState extends State<TaskView> {
             setState(() {
               _plannedFocusCount = 0;
             });
-            _updateTask({'plannedFocusCount': _plannedFocusCount});
+            widget.taskItem.plannedFocusCount = _plannedFocusCount;
+            widget.taskItem.updatedAt = DateTime.now();
+            widget.onTaskUpdate?.call(widget.taskItem);
             //Flyout.of(context).close();
           },
         ),
@@ -612,7 +619,9 @@ class _TaskViewState extends State<TaskView> {
               final value = _descController.text;
               _descFocusNode.unfocus();
               if (value.trim() != _originalDesc) {
-                _updateTask({'desc': value.trim()});
+                widget.taskItem.desc = value.trim();
+                widget.taskItem.updatedAt = DateTime.now();
+                widget.onTaskUpdate?.call(widget.taskItem);
                 _originalDesc = value.trim();
               }
             },
@@ -670,10 +679,9 @@ class _TaskViewState extends State<TaskView> {
 
   // 构建时间组
   Widget _buildTimeSection(BuildContext context) {
-    final createdAt =
-        DateTime.tryParse(widget.taskItem['createdAt'] ?? '') ?? DateTime.now();
-    final updatedAt = DateTime.tryParse(widget.taskItem['updatedAt'] ?? '');
-    final completedAt = DateTime.tryParse(widget.taskItem['completedAt'] ?? '');
+    final createdAt = widget.taskItem.createdAt;
+    final updatedAt = widget.taskItem.updatedAt;
+    final completedAt = widget.taskItem.completedAt;
     final hasBeenModified =
         updatedAt != null &&
         updatedAt.isAfter(createdAt.add(const Duration(seconds: 1)));
@@ -755,7 +763,7 @@ class _TaskViewState extends State<TaskView> {
       context: context,
       builder: (context) => ContentDialog(
         title: const Text('删除任务'),
-        content: Text('将永久删除"${widget.taskItem['name'] ?? '未知任务'}"。'),
+        content: Text('将永久删除"${widget.taskItem.name}"。'),
         actions: [
           Button(
             onPressed: () => Navigator.of(context).pop(),
