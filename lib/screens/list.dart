@@ -104,10 +104,19 @@ class _ListScreenState extends State<ListScreen>
       }
 
       // 如果当前编辑的是同一个项目，同步更新编辑面板中的数据
-      if (_currentEditItem != null && _currentEditItem!.id == item.id) {
-        _currentEditItem!.status = item.status;
-        _currentEditItem!.updatedAt = item.updatedAt;
-        _currentEditItem!.completedAt = item.completedAt;
+      if (_currentEditItem != null /*&& _currentEditItem!.id == item.id*/) {
+        // 创建一个新的TaskListItem对象来触发TaskView的重建
+        _currentEditItem = TaskListItem(
+          id: item.id,
+          name: item.name,
+          desc: item.desc,
+          status: item.status,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+          completedAt: item.completedAt,
+          plannedFocusCount: item.plannedFocusCount,
+          completedFocusCount: item.completedFocusCount,
+        );
       }
     });
     _saveLists();

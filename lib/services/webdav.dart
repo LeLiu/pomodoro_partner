@@ -44,6 +44,7 @@ class WebdavService {
   Future<void> fetchFile(String remoteFilePath, String localFilePath) async {
     try {
       // Download from WebDAV to local file.
+      _logger.i('Fetching file from $remoteFilePath to $localFilePath');
       remoteFilePath = '$_path/$remoteFilePath';
       await _client.read2File(remoteFilePath, localFilePath);
     } catch (e) {
@@ -51,9 +52,10 @@ class WebdavService {
     }
   }
 
-  Future<void> pullFile(String localFilePath, String remoteFilePath) async {
+  Future<void> pushFile(String localFilePath, String remoteFilePath) async {
     try {
       // Upload local temp file to WebDAV
+      _logger.i('Pushing file to WebDAV: $remoteFilePath');
       remoteFilePath = '$_path/$remoteFilePath';
       await _client.writeFromFile(localFilePath, remoteFilePath);
     } catch (e, s) {
@@ -107,7 +109,7 @@ class WebdavService {
         await fetchFile(remoteFilePath, localFilePath);
         break;
       case SyncOperation.pull:
-        await pullFile(localFilePath, remoteFilePath);
+        await pushFile(localFilePath, remoteFilePath);
         break;
       case SyncOperation.noop:
         break;

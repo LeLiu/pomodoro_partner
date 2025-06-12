@@ -160,7 +160,7 @@ class TaskListManager {
       final remoteFilePath = listName;
       try {
           if (!await webdavService.fileExists(remoteFilePath)) {
-          await webdavService.pullFile(localFilePath, remoteFilePath);
+          await webdavService.pushFile(localFilePath, remoteFilePath);
       }
       }
       catch (e, s) {
