@@ -39,7 +39,7 @@ class _ListScreenState extends State<ListScreen>
     _loadLists();
     _loadBackgroundImage();
   }
-  
+
   Future<void> _loadBackgroundImage() async {
     try {
       final bingService = BingImageService();
@@ -74,11 +74,18 @@ class _ListScreenState extends State<ListScreen>
       if (mounted) {
         setState(() {
           _activityList = [
-            TaskListItem.fromMap({'name': '活动加载失败', 'id': 'error', 'status': 'pending'}),
+            TaskListItem.fromMap({
+              'name': '活动加载失败',
+              'id': 'error',
+              'status': 'pending',
+            }),
           ];
-          _focusList = 
-          [
-            TaskListItem.fromMap({'name': '专注列表加载失败', 'id': 'error', 'status': 'pending'}),
+          _focusList = [
+            TaskListItem.fromMap({
+              'name': '专注列表加载失败',
+              'id': 'error',
+              'status': 'pending',
+            }),
           ];
           _isLoading = false;
         });
@@ -204,64 +211,64 @@ class _ListScreenState extends State<ListScreen>
       },
       paneBuilder: (context, closePane) => _buildTaskItemPane(closePane),
       mainContent: Container(
-        padding: EdgeInsets.symmetric(vertical: 30.0, horizontal: 20.0),
+        padding: EdgeInsets.symmetric(vertical: 30.0, horizontal: 30.0),
         decoration: BoxDecoration(
-          image: _backgroundImage != null
-              ? DecorationImage(
-                  image: FileImage(_backgroundImage!),
-                  fit: BoxFit.cover,
-                  colorFilter: ColorFilter.mode(
-                    Colors.black.withValues(alpha: 0.3),
-                    BlendMode.darken,
-                  ),
-                )
-              : DecorationImage(
-                  image: const AssetImage('assets/default_bg.jpg'),
-                  fit: BoxFit.cover,
-                  colorFilter: ColorFilter.mode(
-                    Colors.black.withValues(alpha: 0.3),
-                    BlendMode.darken,
-                  ),
-                ),
+          image: DecorationImage(
+            image: _backgroundImage != null
+                ? FileImage(_backgroundImage!)
+                : const AssetImage('assets/background/01.jpg'),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Colors.black.withValues(alpha: 0.3),
+              BlendMode.darken,
+            ),
+          ),
         ),
         child: Container(
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-          ),
+          decoration: BoxDecoration(color: Colors.transparent),
           child: Column(
             children: <Widget>[
               AppBar(
                 title: Row(
-                  children:[ 
-                  Icon(FluentIcons.task_list,color: Colors.white,),
-                  SizedBox(width: 10,),
-                  const Text('清单'),
-                  ]),
-              titleTextStyle: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
-              backgroundColor: Colors.transparent,),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TabSwitch(
-                selectedIndex: _tabController.index,
-                onChanged: (index) {
-                  setState(() {
-                    _tabController.index = index;
-                  });
-                },
-                items: const [
-                  TabSwitchItem(label: '活动清单', icon: FluentIcons.group_list),
-                  TabSwitchItem(label: '专注清单', icon: FluentIcons.favorite_list),
-                ],
+                  children: [
+                    Icon(FluentIcons.task_list, color: Colors.white),
+                    SizedBox(width: 10),
+                    const Text('任务清单'),
+                  ],
+                ),
+                titleTextStyle: TextStyle(
+                  color: Colors.white,
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
+                backgroundColor: Colors.transparent,
               ),
-            ),
-            Expanded(
-              child: _tabController.index == 0
-                  ? _buildTabList(true)
-                  : _buildTabList(false),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical:4),
+                child: TabSwitch(
+                  selectedIndex: _tabController.index,
+                  onChanged: (index) {
+                    setState(() {
+                      _tabController.index = index;
+                    });
+                  },
+                  items: const [
+                    TabSwitchItem(label: '活动清单', icon: FluentIcons.group_list),
+                    TabSwitchItem(
+                      label: '专注清单',
+                      icon: FluentIcons.favorite_list,
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: _tabController.index == 0
+                    ? _buildTabList(true)
+                    : _buildTabList(false),
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -300,16 +307,12 @@ class _ListScreenState extends State<ListScreen>
     );
   }
 
-  Widget _buildListItem(
-    TaskListItem item,
-    bool isActivityList,
-    bool isDone,
-  ) {
+  Widget _buildListItem(TaskListItem item, bool isActivityList, bool isDone) {
     final FlyoutController controller = FlyoutController();
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2.0),
       decoration: BoxDecoration(
-        color: FluentTheme.of(context).cardColor,
+        color: FluentTheme.of(context).menuColor.withAlpha(0xEE),
         borderRadius: BorderRadius.circular(4.0),
       ),
       child: FlyoutTarget(
@@ -326,6 +329,7 @@ class _ListScreenState extends State<ListScreen>
             );
           },
           child: ListTile(
+            contentPadding: EdgeInsets.all(0),
             leading: HoverCheckbox(
               value: isDone,
               onChanged: (value) => _toggleItemDone(item, value),
@@ -434,9 +438,7 @@ class _ListScreenState extends State<ListScreen>
     setState(() {
       if (_isEditingActivityItem) {
         // 从活动列表移动到专注列表
-        _activityList.removeWhere(
-          (item) => item.id == _currentItem!.id,
-        );
+        _activityList.removeWhere((item) => item.id == _currentItem!.id);
         _focusList.add(_currentItem!);
       } else {
         // 从专注列表移动到活动列表
@@ -455,9 +457,7 @@ class _ListScreenState extends State<ListScreen>
 
     setState(() {
       if (_isEditingActivityItem) {
-        _activityList.removeWhere(
-          (item) => item.id == _currentItem!.id,
-        );
+        _activityList.removeWhere((item) => item.id == _currentItem!.id);
       } else {
         _focusList.removeWhere((item) => item.id == _currentItem!.id);
       }

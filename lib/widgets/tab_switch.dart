@@ -20,7 +20,6 @@ class TabSwitch extends StatefulWidget {
 class _TabSwitchState extends State<TabSwitch>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  // late Animation<double> _slideAnimation; // Unused
 
   @override
   void initState() {
@@ -29,10 +28,6 @@ class _TabSwitchState extends State<TabSwitch>
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    // _slideAnimation = Tween<double>(
-    //   begin: 0.0,
-    //   end: 1.0,
-    // ).animate(_animationController); // Unused
   }
 
   @override
@@ -58,14 +53,10 @@ class _TabSwitchState extends State<TabSwitch>
       child: Container(
         width: 240,
         decoration: BoxDecoration(
-          color: isDarkMode
-              ? const Color(0xFF2D2D30) 
-              : const Color(0xFFF8F9FA),
+          color: theme.menuColor.withAlpha(0xEE),
           borderRadius: BorderRadius.circular(4.0),
           border: Border.all(
-            color: isDarkMode
-                ? const Color(0xFF404040)
-                : const Color(0xFFE1E5E9),
+            color: theme.menuColor.withAlpha(0xFF),
             width: 1.0,
           ),
         ),
@@ -78,20 +69,13 @@ class _TabSwitchState extends State<TabSwitch>
               left: widget.selectedIndex * (240 / widget.items.length) + 2,
               top: 2,
               bottom: 2,
-              width: (240 / widget.items.length) - 4,
+              width: (240 / widget.items.length) - 6,
               child: Container(
                 decoration: BoxDecoration(
                   color: isDarkMode
-                      ? const Color(0xFF0078D4) // 蓝色主题色
-                      : const Color(0xFF0078D4),
-                  borderRadius: BorderRadius.circular(2.0),
-                  boxShadow: [
-                    // BoxShadow(
-                    //   color: const Color(0xFF0078D4).withValues(alpha: 0.2),
-                    //   blurRadius: 3.0,
-                    //   offset: const Offset(0, 1),
-                    // ),
-                  ],
+                      ? FluentTheme.of(context).accentColor.dark
+                      : FluentTheme.of(context).accentColor.light,
+                  borderRadius: BorderRadius.circular(4.0),
                 ),
               ),
             ),
