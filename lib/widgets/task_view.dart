@@ -257,7 +257,7 @@ class _TaskViewState extends State<TaskView> {
                 value: _isCompleted,
                 onChanged: (value) {
                   setState(() {
-                    _isCompleted = value ?? false;
+                    _isCompleted = value;
                     _status = _isCompleted
                         ? 'completed'
                         : (_completedFocusCount > 0 ? 'active' : 'pending');
@@ -683,7 +683,6 @@ class _TaskViewState extends State<TaskView> {
     final updatedAt = widget.taskItem.updatedAt;
     final completedAt = widget.taskItem.completedAt;
     final hasBeenModified =
-        updatedAt != null &&
         updatedAt.isAfter(createdAt.add(const Duration(seconds: 1)));
 
     return Container(

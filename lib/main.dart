@@ -12,7 +12,7 @@ import './app/theme.dart';
 import './screens/settings.dart';
 import './screens/list.dart';
 import './screens/focus.dart';
-import './models/timer.dart';
+
 import './utils/logger.dart';
 import './features/list.dart';
 import './services/bing_image.dart';
@@ -155,19 +155,19 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
       <NavigationPaneItem>[
         PaneItem(
           key: const ValueKey('/list'),
-          icon: const Icon(FluentIcons.task_list, size: 18, color: Color.fromARGB(255, 209, 128, 255)),
+          icon: Icon(FluentIcons.task_list, size: 15, color: Colors.orange.darkest),
           title: const Text(' 任务清单', style: TextStyle(fontSize: 14)),
           body: const SizedBox.shrink(),
         ),
         PaneItem(
           key: const ValueKey('/focus'),
-          icon: const Icon(FluentIcons.timer, size: 18),
+          icon: Icon(FluentIcons.reminder_time, size: 15, color: Colors.purple.darkest),
           title: const Text(' 番茄专注', style: TextStyle(fontSize: 14)),
           body: const SizedBox.shrink(),
         ),
         PaneItem(
           key: const ValueKey('/statistics'),
-          icon: const Icon(FluentIcons.summary_chart, size: 18),
+          icon: Icon(FluentIcons.pie_single, size: 15, color: Colors.teal.darkest),
           title: const Text(' 统计数据', style: TextStyle(fontSize: 14)),
           body: const SizedBox.shrink(),
         ),
@@ -192,8 +192,8 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
     PaneItemSeparator(),
     PaneItem(
       key: const ValueKey('/settings'),
-      icon: const Icon(FluentIcons.settings),
-      title: const Text('Settings'),
+      icon: const Icon(FluentIcons.settings, size: 15),
+      title: const Text('设置', style: TextStyle(fontSize: 14)),
       body: const SizedBox.shrink(),
       onTap: () {
         if (GoRouterState.of(context).uri.toString() != '/settings') {
@@ -366,16 +366,7 @@ class _AppHomePageState extends State<AppHomePage> with WindowListener {
     return DragToMoveArea(child: title);
   }
 
-  Future<void> _cleanupResources() async {
-  try {
-    // 停止定时器
-    final timerModel = Provider.of<TimerModel>(context, listen: false);
-    timerModel.pause();
-    timerModel.dispose();
-  } catch (e) {
-    // TODO should log
-  }
-}
+
 }
 
 class WindowButtons extends StatelessWidget {

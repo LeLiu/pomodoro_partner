@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart'
     hide Colors, IconButton, Checkbox, ListTile, FilledButton;
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:provider/provider.dart';
 //import '../models/timer_model.dart';
 import '../features/list.dart';
 import '../utils/logger.dart';
